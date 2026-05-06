@@ -1,14 +1,14 @@
 use openapi::apis::configuration::{ApiKey, Configuration};
 use openapi::apis::py_load_rest_api;
 
-const API_URL: &str = "http://localhost:8000";
-const API_KEY: &str = "API_KEY_HERE";
-
 fn get_config() -> Configuration {
+    let api_url = std::env::var("API_URL").unwrap_or_else(|_| "http://localhost:8000".to_string());
+    let api_key = std::env::var("API_KEY").expect("API_KEY must be set");
+
     let mut config = Configuration::new();
-    config.base_path = API_URL.to_string();
+    config.base_path = api_url;
     config.api_key = Some(ApiKey {
-        key: API_KEY.to_string(),
+        key: api_key,
         prefix: None,
     });
     config
