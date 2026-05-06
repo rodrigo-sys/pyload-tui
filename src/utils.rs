@@ -15,16 +15,23 @@ fn get_config() -> Configuration {
 }
 
 pub async fn fetch_packages() -> Result<Vec<openapi::models::PackageData>, String> {
-    py_load_rest_api::api_get_queue_get(&get_config())
+    let mut queue = py_load_rest_api::api_get_queue_get(&get_config())
         .await
-        .map_err(|e| e.to_string())
+        .map_err(|e| e.to_string())?;
+
+    let collector = py_load_rest_api::api_get_collector_get(&get_config())
+        .await
+        .map_err(|e| e.to_string())?;
+
+    queue.extend(collector);
+
+    Ok(queue)
 }
 
 pub async fn fetch_files(package_id: i32) -> Result<Vec<openapi::models::FileData>, String> {
     let pkg = py_load_rest_api::api_get_package_data_get(&get_config(), Some(package_id))
         .await
         .map_err(|e| e.to_string())?;
-    pkg.links
-        .flatten()
-        .ok_or_else(|| "No files found".to_string())
+
+    pkg.links.flatten().ok_or_else(|| "No files found".to_string())
 }
