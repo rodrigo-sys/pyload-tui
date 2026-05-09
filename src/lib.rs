@@ -3,4 +3,5 @@ pub mod current_screen;
 pub mod table;
 pub mod utils;
 pub mod app_action;
-mod packages_screen;
+pub mod packages_screen;
+pub mod files_screen;
