@@ -1,5 +1,7 @@
+use crate::packages_screen::PackagesScreen;
+
 pub enum CurrentScreen {
-    Packages,
+    Packages(PackagesScreen),
     Files,
     AddPackageForm,
     AppendFilesForm,
