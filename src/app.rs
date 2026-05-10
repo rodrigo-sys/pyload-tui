@@ -82,7 +82,7 @@ impl App {
     }
 
     pub fn get_bindings(&self) -> BTreeMap<&'static str, &'static str> {
-        let table_screen_binds = BTreeMap::from([
+        let mut table_screen_binds = BTreeMap::from([
             ("l", "enter"),
             ("j", "next item"),
             ("k", "prev item"),
@@ -90,12 +90,15 @@ impl App {
         ]);
 
         match self.current_screen {
-            CurrentScreen::Packages | CurrentScreen::Files => table_screen_binds,
+            CurrentScreen::Packages => table_screen_binds,
+            CurrentScreen::Files => {
+                table_screen_binds.insert("h", "go back");
+                table_screen_binds
+            }
             CurrentScreen::AddPackageForm => todo!(),
             CurrentScreen::AppendFilesForm => todo!(),
         }
     }
-
 }
 
 impl Default for App {
