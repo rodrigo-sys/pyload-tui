@@ -45,7 +45,10 @@ impl PackagesScreen {
 
 impl Default for PackagesScreen {
     fn default() -> Self {
-        Self { packages: vec![], table_state: TableState::new() }
+        Self {
+            packages: vec![],
+            table_state: TableState::new(),
+        }
     }
 }
 
@@ -53,6 +56,11 @@ impl StatefulWidget for PackagesScreen {
     type State = TableState;
 
     fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
-        StatefulWidget::render(PackagesTable::from(self.packages.clone()).0, area, buf, state);
+        StatefulWidget::render(
+            PackagesTable::from(self.packages.clone()).0,
+            area,
+            buf,
+            state,
+        );
     }
 }

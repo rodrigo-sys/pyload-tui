@@ -1,8 +1,12 @@
+use std::collections::BTreeMap;
+
 use crossterm::event::{KeyCode, KeyEvent};
 
 use crate::{
-    app_action::AppAction, screens::{CurrentScreen, Screens}, files_screen::FilesScreen,
+    app_action::AppAction,
+    files_screen::FilesScreen,
     packages_screen::PackagesScreen,
+    screens::{CurrentScreen, Screens},
 };
 
 pub struct App {
@@ -76,6 +80,22 @@ impl App {
 
         self.current_screen = CurrentScreen::Files;
     }
+
+    pub fn get_bindings(&self) -> BTreeMap<&'static str, &'static str> {
+        let table_screen_binds = BTreeMap::from([
+            ("l", "enter"),
+            ("j", "next item"),
+            ("k", "prev item"),
+            ("q", "quit"),
+        ]);
+
+        match self.current_screen {
+            CurrentScreen::Packages | CurrentScreen::Files => table_screen_binds,
+            CurrentScreen::AddPackageForm => todo!(),
+            CurrentScreen::AppendFilesForm => todo!(),
+        }
+    }
+
 }
 
 impl Default for App {
