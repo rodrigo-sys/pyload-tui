@@ -1,5 +1,5 @@
 pub mod app;
-pub mod current_screen;
+pub mod screens;
 pub mod table;
 pub mod utils;
 pub mod app_action;

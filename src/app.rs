@@ -1,19 +1,25 @@
 use crossterm::event::{KeyCode, KeyEvent};
 
 use crate::{
-    app_action::AppAction, current_screen::CurrentScreen, files_screen::FilesScreen,
+    app_action::AppAction, screens::{CurrentScreen, Screens}, files_screen::FilesScreen,
     packages_screen::PackagesScreen,
 };
 
 pub struct App {
+    pub screens: Screens,
     pub current_screen: CurrentScreen,
     pub quit: bool,
 }
 
 impl App {
     pub async fn new() -> Self {
+        let packages = PackagesScreen::new().await;
         Self {
-            current_screen: CurrentScreen::Packages(PackagesScreen::new().await),
+            screens: Screens {
+                packages: Some(packages),
+                files: None,
+            },
+            current_screen: CurrentScreen::Packages,
             quit: false,
         }
     }
@@ -25,31 +31,62 @@ impl App {
         }
 
         let action = match &mut self.current_screen {
-            CurrentScreen::Packages(s) => s.handle_keys(key),
-            CurrentScreen::Files(s) => s.handle_keys(key),
+            CurrentScreen::Packages => {
+                let s = self.screens.packages.as_mut().unwrap();
+                s.handle_keys(key)
+            }
+            CurrentScreen::Files => {
+                let s = self.screens.files.as_mut().unwrap();
+                s.handle_keys(key)
+            }
             _ => return,
         };
 
         match action {
             Some(AppAction::GoToPackages) => {
-                if !matches!(self.current_screen, CurrentScreen::Packages(_)) {
-                    self.current_screen = CurrentScreen::Packages(PackagesScreen::new().await);
-                }
+                self.go_to_packages();
             }
             Some(AppAction::GoToFiles(pid)) => {
-                if !matches!(self.current_screen, CurrentScreen::Files(_)) {
-                    self.current_screen = CurrentScreen::Files(FilesScreen::new(pid).await);
-                }
+                self.go_to_files(pid).await;
             }
             _ => {}
         }
+    }
+
+    fn go_to_packages(&mut self) {
+        if matches!(self.current_screen, CurrentScreen::Packages) {
+            return;
+        }
+
+        if self.screens.packages.is_none() {
+            self.screens.packages = Some(PackagesScreen::default());
+        }
+
+        self.current_screen = CurrentScreen::Packages;
+    }
+
+    async fn go_to_files(&mut self, pid: i32) {
+        if matches!(self.current_screen, CurrentScreen::Files) {
+            return;
+        }
+
+        if self.screens.files.is_none() {
+            self.screens.files = Some(FilesScreen::new(pid).await);
+        }
+
+        self.current_screen = CurrentScreen::Files;
     }
 }
 
 impl Default for App {
     fn default() -> Self {
+        let packages = PackagesScreen::default();
         Self {
-            current_screen: CurrentScreen::Packages(PackagesScreen::default()),
+            screens: Screens {
+                packages: Some(packages),
+                files: None,
+            },
+            current_screen: CurrentScreen::Packages,
             quit: false,
         }
     }

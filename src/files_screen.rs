@@ -3,7 +3,7 @@ use openapi::models::FileData;
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
-    widgets::{StatefulWidget, TableState, Widget},
+    widgets::{StatefulWidget, TableState},
 };
 
 use crate::{app_action::AppAction, table::FilesTable, utils::fetch_files};
@@ -27,7 +27,6 @@ impl FilesScreen {
 
     pub fn handle_keys(&mut self, key: KeyEvent) -> Option<AppAction> {
         match key.code {
-            // KeyCode::Char('q') | KeyCode::Esc => Some(AppAction::GoToPackages),
             KeyCode::Char('h') => Some(AppAction::GoToPackages),
             KeyCode::Char('j') => {
                 self.table_state.select_next();
@@ -48,9 +47,10 @@ impl Default for FilesScreen {
     }
 }
 
-impl Widget for &FilesScreen {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        let mut state = self.table_state;
-        StatefulWidget::render(FilesTable::from(self.files.clone()).0, area, buf, &mut state);
+impl StatefulWidget for FilesScreen {
+    type State = TableState;
+
+    fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
+        StatefulWidget::render(FilesTable::from(self.files.clone()).0, area, buf, state);
     }
 }

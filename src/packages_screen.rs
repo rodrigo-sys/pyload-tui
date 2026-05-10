@@ -3,7 +3,7 @@ use openapi::models::PackageData;
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
-    widgets::{StatefulWidget, TableState, Widget},
+    widgets::{StatefulWidget, TableState},
 };
 
 use crate::{app_action::AppAction, table::PackagesTable, utils::fetch_packages};
@@ -49,9 +49,10 @@ impl Default for PackagesScreen {
     }
 }
 
-impl Widget for &PackagesScreen {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        let mut state = self.table_state;
-        StatefulWidget::render(PackagesTable::from(self.packages.clone()).0, area, buf, &mut state);
+impl StatefulWidget for PackagesScreen {
+    type State = TableState;
+
+    fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
+        StatefulWidget::render(PackagesTable::from(self.packages.clone()).0, area, buf, state);
     }
 }
