@@ -7,3 +7,4 @@ pub mod packages_screen;
 pub mod files_screen;
 pub mod key_hints;
 pub mod add_package_form;
+pub mod append_files_form;
