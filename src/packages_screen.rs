@@ -6,7 +6,9 @@ use ratatui::{
     widgets::{StatefulWidget, TableState},
 };
 
-use crate::{app_action::AppAction, table::PackagesTable, utils::fetch_packages};
+use crate::{
+    app_action::AppAction, table::PackagesTable, utils::fetch_packages,
+};
 
 #[derive(Clone)]
 pub struct PackagesScreen {
@@ -26,6 +28,11 @@ impl PackagesScreen {
     pub async fn handle_keys(&mut self, key: KeyEvent) -> Option<AppAction> {
         match key.code {
             KeyCode::Char('q') => Some(AppAction::Quit),
+            KeyCode::Char('a') => {
+                let index = self.table_state.selected().unwrap();
+                let pid = self.packages[index].pid;
+                Some(AppAction::OpenAppendFilesForm(pid))
+            }
             KeyCode::Char('l') => {
                 let index = self.table_state.selected().unwrap();
                 let pid = self.packages[index].pid;

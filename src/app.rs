@@ -78,7 +78,7 @@ impl App {
                     (!matches!(self.current_screen, CurrentScreen::AddPackageForm))
                         .then_some(AppAction::Quit)
                 }
-                KeyCode::Char('a') => Some(AppAction::OpenAddPackageForm),
+                KeyCode::Char('A') => Some(AppAction::OpenAddPackageForm),
                 _ => None,
             };
         }
@@ -153,6 +153,7 @@ impl App {
             _ => {
                 let mut binds = vec![
                     ("a", "add links"),
+                    ("A", "add package"),
                     ("l", "enter"),
                     ("j", "next item"),
                     ("k", "prev item"),
