@@ -18,15 +18,16 @@ pub struct FilesScreen {
 impl FilesScreen {
     pub async fn new(package_id: i32) -> Self {
         let files = fetch_files(package_id).await.unwrap_or_default();
-         Self {
+        Self {
             package_id,
             files,
             table_state: TableState::new().with_selected(0),
         }
     }
 
-    pub fn handle_keys(&mut self, key: KeyEvent) -> Option<AppAction> {
+    pub async fn handle_keys(&mut self, key: KeyEvent) -> Option<AppAction> {
         match key.code {
+            KeyCode::Char('q') => Some(AppAction::Quit),
             KeyCode::Char('h') => Some(AppAction::GoToPackages),
             KeyCode::Char('j') => {
                 self.table_state.select_next();

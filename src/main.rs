@@ -1,10 +1,9 @@
-use crossterm::event::{self, Event};
-use pyload_tui::{app::App, key_hints::KeyHints};
-use pyload_tui::screens::CurrentScreen;
+use crossterm::event::{self};
+use crossterm::execute;
+use pyload_tui::{app::App, key_hints::KeyHints, screens::CurrentScreen};
 use ratatui::layout::{Constraint, Direction, Layout};
-use tokio::main;
 
-#[main]
+#[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut app = App::new().await;
 
@@ -32,12 +31,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 _ => {}
             }
 
-            frame.render_widget(KeyHints::new(app.get_bindings()), areas[1]);
+            frame.render_widget(KeyHints::new(&app.get_bindings()), areas[1]);
         })?;
 
-        if let Event::Key(key) = event::read()? {
-            app.handle_key(key).await;
-        }
+        app.handle_events(event::read()?).await;
     }
 
     ratatui::restore();

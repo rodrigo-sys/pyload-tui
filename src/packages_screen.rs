@@ -23,8 +23,9 @@ impl PackagesScreen {
         }
     }
 
-    pub fn handle_keys(&mut self, key: KeyEvent) -> Option<AppAction> {
+    pub async fn handle_keys(&mut self, key: KeyEvent) -> Option<AppAction> {
         match key.code {
+            KeyCode::Char('q') => Some(AppAction::Quit),
             KeyCode::Char('l') => {
                 let index = self.table_state.selected().unwrap();
                 let pid = self.packages[index].pid;

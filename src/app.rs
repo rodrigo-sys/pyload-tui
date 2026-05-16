@@ -32,27 +32,39 @@ impl App {
         if key.code == KeyCode::Char('q') {
             self.quit = true;
             return;
+    pub async fn handle_events(&mut self, event: Event) {
+        match event {
+            Event::Key(key) => self.handle_key(key).await,
+            _ => {}
         }
+    }
 
-        let action = match &mut self.current_screen {
+    pub async fn handle_key(&mut self, key: KeyEvent) {
+        let mut action = match self.current_screen {
             CurrentScreen::Packages => {
                 let s = self.screens.packages.as_mut().unwrap();
-                s.handle_keys(key)
+                s.handle_keys(key).await
             }
             CurrentScreen::Files => {
                 let s = self.screens.files.as_mut().unwrap();
-                s.handle_keys(key)
+                s.handle_keys(key).await
             }
-            _ => return,
+            }
+            _ => None,
         };
 
+        if action.is_none() {
+            action = match key.code {
+                KeyCode::Char('q') => Some(AppAction::Quit),
+                _ => None,
+            };
+        }
+
         match action {
-            Some(AppAction::GoToPackages) => {
+            Some(AppAction::Quit) => self.quit = true,
                 self.go_to_packages();
-            }
-            Some(AppAction::GoToFiles(pid)) => {
-                self.go_to_files(pid).await;
-            }
+            Some(AppAction::GoToPackages) => self.go_to_packages(),
+            Some(AppAction::GoToFiles(pid)) => self.go_to_files(pid).await,
             _ => {}
         }
     }
