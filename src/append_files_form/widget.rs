@@ -12,7 +12,7 @@ impl Widget for AppendFilesForm {
     fn render(mut self, area: Rect, buf: &mut Buffer) {
         let container = Block::new()
             .padding(Padding::uniform(3))
-            .title(" Add Links to Package ");
+            .title(format!(" Add Links to {} ", self.package_name));
 
         let inner = container.inner(area);
 

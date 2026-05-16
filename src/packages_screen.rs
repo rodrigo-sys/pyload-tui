@@ -30,8 +30,8 @@ impl PackagesScreen {
             KeyCode::Char('q') => Some(AppAction::Quit),
             KeyCode::Char('a') => {
                 let index = self.table_state.selected().unwrap();
-                let pid = self.packages[index].pid;
-                Some(AppAction::OpenAppendFilesForm(pid))
+                let pkg = &self.packages[index];
+                Some(AppAction::OpenAppendFilesForm(pkg.pid, pkg.name.clone()))
             }
             KeyCode::Char('l') => {
                 let index = self.table_state.selected().unwrap();

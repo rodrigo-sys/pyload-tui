@@ -12,15 +12,17 @@ use crate::{app_action::AppAction, utils::add_links_to_package};
 #[derive(Clone)]
 pub struct AppendFilesForm {
     pub package_id: i32,
+    pub package_name: String,
     pub links: TextArea<'static>,
     pub submit: Paragraph<'static>,
     pub selected: SelectedInput,
 }
 
 impl AppendFilesForm {
-    pub fn new(package_id: i32) -> Self {
+    pub fn new(package_id: i32, package_name: String) -> Self {
         Self {
             package_id,
+            package_name,
             links: TextArea::default(),
             submit: Paragraph::new("Add links")
                 .alignment(HorizontalAlignment::Center)

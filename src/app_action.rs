@@ -3,5 +3,5 @@ pub enum AppAction {
     GoToPackages,
     GoToFiles(i32),
     OpenAddPackageForm,
-    OpenAppendFilesForm(i32),
+    OpenAppendFilesForm(i32, String),
 }

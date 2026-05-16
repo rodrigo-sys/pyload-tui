@@ -86,7 +86,7 @@ impl App {
         match action {
             Some(AppAction::Quit) => self.quit = true,
             Some(AppAction::OpenAddPackageForm) => self.go_to_add_package_form(),
-            Some(AppAction::OpenAppendFilesForm(pid)) => self.go_to_append_files_form(pid),
+            Some(AppAction::OpenAppendFilesForm(pid, name)) => self.go_to_append_files_form(pid, name),
             Some(AppAction::GoToPackages) => self.go_to_packages(),
             Some(AppAction::GoToFiles(pid)) => self.go_to_files(pid).await,
             _ => {}
@@ -129,12 +129,12 @@ impl App {
         self.current_screen = CurrentScreen::Files;
     }
 
-    fn go_to_append_files_form(&mut self, pid: i32) {
+    fn go_to_append_files_form(&mut self, pid: i32, name: String) {
         if matches!(self.current_screen, CurrentScreen::AppendFilesForm) {
             return;
         }
 
-        self.screens.append_files_form = Some(AppendFilesForm::new(pid));
+        self.screens.append_files_form = Some(AppendFilesForm::new(pid, name));
         self.current_screen = CurrentScreen::AppendFilesForm;
     }
 
