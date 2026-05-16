@@ -1,8 +1,7 @@
 use ratatui::{
     layout::{Constraint, Direction, Layout},
     prelude::{Buffer, Rect},
-    style::Style,
-    widgets::{Block, Borders, Padding, Paragraph, Widget},
+    widgets::{Block, Borders, Padding, Widget},
 };
 
 use crate::append_files_form::AppendFilesForm;
