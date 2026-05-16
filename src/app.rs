@@ -1,8 +1,7 @@
-use std::collections::BTreeMap;
-
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::{Event, KeyCode, KeyEvent};
 
 use crate::{
+    add_package_form::AddPackageForm,
     app_action::AppAction,
     files_screen::FilesScreen,
     packages_screen::PackagesScreen,
@@ -22,19 +21,23 @@ impl App {
             screens: Screens {
                 packages: Some(packages),
                 files: None,
+                add_package_form: None,
             },
             current_screen: CurrentScreen::Packages,
             quit: false,
         }
     }
 
-    pub async fn handle_key(&mut self, key: KeyEvent) {
-        if key.code == KeyCode::Char('q') {
-            self.quit = true;
-            return;
     pub async fn handle_events(&mut self, event: Event) {
         match event {
             Event::Key(key) => self.handle_key(key).await,
+            Event::Paste(content) => {
+                if let CurrentScreen::AddPackageForm = self.current_screen
+                    && let Some(f) = self.screens.add_package_form.as_mut()
+                {
+                    f.handle_paste(&content);
+                }
+            }
             _ => {}
         }
     }
@@ -49,24 +52,43 @@ impl App {
                 let s = self.screens.files.as_mut().unwrap();
                 s.handle_keys(key).await
             }
+            CurrentScreen::AddPackageForm => {
+                let s = self.screens.add_package_form.as_mut().unwrap();
+                s.handle_keys(key).await
             }
             _ => None,
         };
 
         if action.is_none() {
             action = match key.code {
-                KeyCode::Char('q') => Some(AppAction::Quit),
+                KeyCode::Char('q') => {
+                    (!matches!(self.current_screen, CurrentScreen::AddPackageForm))
+                        .then_some(AppAction::Quit)
+                }
+                KeyCode::Char('a') => Some(AppAction::OpenAddPackageForm),
                 _ => None,
             };
         }
 
         match action {
             Some(AppAction::Quit) => self.quit = true,
-                self.go_to_packages();
+            Some(AppAction::OpenAddPackageForm) => self.go_to_add_package_form(),
             Some(AppAction::GoToPackages) => self.go_to_packages(),
             Some(AppAction::GoToFiles(pid)) => self.go_to_files(pid).await,
             _ => {}
         }
+    }
+
+    fn go_to_add_package_form(&mut self) {
+        if matches!(self.current_screen, CurrentScreen::AddPackageForm) {
+            return;
+        }
+
+        if self.screens.add_package_form.is_none() {
+            self.screens.add_package_form = Some(AddPackageForm::default());
+        }
+
+        self.current_screen = CurrentScreen::AddPackageForm;
     }
 
     fn go_to_packages(&mut self) {
@@ -120,6 +142,7 @@ impl Default for App {
             screens: Screens {
                 packages: Some(packages),
                 files: None,
+                add_package_form: None,
             },
             current_screen: CurrentScreen::Packages,
             quit: false,
