@@ -2,8 +2,13 @@ use std::collections::HashMap;
 
 use openapi::apis::Error;
 use openapi::apis::configuration::{ApiKey, Configuration};
-use openapi::apis::py_load_rest_api::{self, ApiAddPackagePostError, api_add_package_post, api_set_package_data_post};
-use openapi::models::{ApiAddPackagePostRequest, ApiSetPackageDataPostRequest, Destination};
+use openapi::apis::py_load_rest_api::{
+    self, ApiAddFilesPostError, ApiAddPackagePostError, api_add_files_post, api_add_package_post,
+    api_set_package_data_post,
+};
+use openapi::models::{
+    ApiAddFilesPostRequest, ApiAddPackagePostRequest, ApiSetPackageDataPostRequest, Destination,
+};
 
 fn get_config() -> Configuration {
     let api_url = std::env::var("API_URL").unwrap_or_else(|_| "http://localhost:8000".to_string());
@@ -59,4 +64,12 @@ pub async fn add_package(
     }
 
     Ok(pid)
+}
+
+pub async fn add_links_to_package(
+    package_id: i32,
+    links: Vec<String>,
+) -> Result<(), Error<ApiAddFilesPostError>> {
+    let req = ApiAddFilesPostRequest::new(package_id, links);
+    api_add_files_post(&get_config(), Some(req)).await
 }
