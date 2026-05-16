@@ -1,5 +1,9 @@
+use std::collections::HashMap;
+
+use openapi::apis::Error;
 use openapi::apis::configuration::{ApiKey, Configuration};
-use openapi::apis::py_load_rest_api;
+use openapi::apis::py_load_rest_api::{self, ApiAddPackagePostError, api_add_package_post, api_set_package_data_post};
+use openapi::models::{ApiAddPackagePostRequest, ApiSetPackageDataPostRequest, Destination};
 
 fn get_config() -> Configuration {
     let api_url = std::env::var("API_URL").unwrap_or_else(|_| "http://localhost:8000".to_string());
@@ -33,5 +37,26 @@ pub async fn fetch_files(package_id: i32) -> Result<Vec<openapi::models::FileDat
         .await
         .map_err(|e| e.to_string())?;
 
-    pkg.links.flatten().ok_or_else(|| "No files found".to_string())
+    pkg.links
+        .flatten()
+        .ok_or_else(|| "No files found".to_string())
+}
+
+pub async fn add_package(
+    name: String,
+    links: Vec<String>,
+    password: Option<String>,
+    dest: Destination,
+) -> Result<i32, Error<ApiAddPackagePostError>> {
+    let mut pkg = ApiAddPackagePostRequest::new(name, links);
+    pkg.dest = Some(dest);
+    let pid = api_add_package_post(&get_config(), Some(pkg)).await?;
+
+    if let Some(pw) = password && !pw.is_empty() {
+        let data = HashMap::from([("password".to_string(), serde_json::Value::from(pw))]);
+        let req = ApiSetPackageDataPostRequest::new(pid, data);
+        let _ = api_set_package_data_post(&get_config(), Some(req)).await;
+    }
+
+    Ok(pid)
 }
