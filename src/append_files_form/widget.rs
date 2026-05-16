@@ -1,21 +1,15 @@
 use ratatui::{
     layout::{Constraint, Direction, Layout},
     prelude::{Buffer, Rect},
+    style::Style,
     widgets::{Block, Borders, Padding, Widget},
 };
 
+use super::SelectedInput;
 use crate::append_files_form::AppendFilesForm;
 
-fn links_block() -> Block<'static> {
-    Block::default()
-        .borders(Borders::ALL)
-        .border_style(ratatui::style::Color::Yellow)
-        .title("links")
-        .padding(Padding::new(1, 1, 0, 0))
-}
-
 impl Widget for AppendFilesForm {
-    fn render(self, area: Rect, buf: &mut Buffer) {
+    fn render(mut self, area: Rect, buf: &mut Buffer) {
         let container = Block::new()
             .padding(Padding::uniform(3))
             .title(" Add Links to Package ");
@@ -38,9 +32,39 @@ impl Widget for AppendFilesForm {
 
         container.render(area, buf);
 
+        let links_active = self.selected == SelectedInput::Links;
+        let links_color = if links_active {
+            ratatui::style::Color::Yellow
+        } else {
+            ratatui::style::Color::Blue
+        };
         let mut links = self.links.clone();
-        links.set_block(links_block());
+        links.set_block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(links_color)
+                .title("links")
+                .padding(Padding::new(1, 1, 0, 0)),
+        );
+        if !links_active {
+            links.set_cursor_style(Style::default());
+        }
         links.render(rows[0], buf);
+
+        let submit_active = self.selected == SelectedInput::AddLinks;
+        let (border_color, text_color) = if submit_active {
+            (ratatui::style::Color::Yellow, ratatui::style::Color::Yellow)
+        } else {
+            (ratatui::style::Color::Blue, ratatui::style::Color::Blue)
+        };
+        self.submit = ratatui::widgets::Paragraph::new("Add links")
+            .alignment(ratatui::layout::HorizontalAlignment::Center)
+            .block(
+                Block::new()
+                    .borders(Borders::ALL)
+                    .border_style(border_color)
+                    .style(Style::new().fg(text_color)),
+            );
         self.submit.render(add_links_layout[0], buf);
     }
 }

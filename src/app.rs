@@ -148,6 +148,8 @@ impl App {
             ],
             CurrentScreen::AppendFilesForm => vec![
                 ("Esc", "back"),
+                ("Tab", "next"),
+                ("Shift+Tab", "prev"),
                 ("Enter", "submit"),
             ],
             _ => {

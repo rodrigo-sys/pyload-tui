@@ -6,6 +6,7 @@ use ratatui::{
 use ratatui::layout::HorizontalAlignment;
 use ratatui_textarea::TextArea;
 
+use super::SelectedInput;
 use crate::{app_action::AppAction, utils::add_links_to_package};
 
 #[derive(Clone)]
@@ -13,6 +14,7 @@ pub struct AppendFilesForm {
     pub package_id: i32,
     pub links: TextArea<'static>,
     pub submit: Paragraph<'static>,
+    pub selected: SelectedInput,
 }
 
 impl AppendFilesForm {
@@ -28,15 +30,32 @@ impl AppendFilesForm {
                         .border_style(Color::Green)
                         .style(Style::new().fg(Color::Green)),
                 ),
+            selected: SelectedInput::default(),
         }
     }
 
     pub async fn handle_keys(&mut self, key: KeyEvent) -> Option<AppAction> {
         match key.code {
             KeyCode::Esc => Some(AppAction::GoToPackages),
-            KeyCode::Enter => self.submit().await,
+            KeyCode::Tab => {
+                self.selected = self.selected.next();
+                None
+            }
+            KeyCode::BackTab => {
+                self.selected = self.selected.prev();
+                None
+            }
+            KeyCode::Enter => match self.selected {
+                SelectedInput::AddLinks => self.submit().await,
+                SelectedInput::Links => {
+                    self.links.input(key);
+                    None
+                }
+            },
             _ => {
-                self.links.input(key);
+                if self.selected == SelectedInput::Links {
+                    self.links.input(key);
+                }
                 None
             }
         }
@@ -60,6 +79,8 @@ impl AppendFilesForm {
     }
 
     pub fn handle_paste(&mut self, content: &str) {
-        self.links.insert_str(content);
+        if self.selected == SelectedInput::Links {
+            self.links.insert_str(content);
+        }
     }
 }
