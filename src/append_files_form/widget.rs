@@ -1,7 +1,8 @@
 use ratatui::{
     layout::{Constraint, Direction, Layout},
-    prelude::{Buffer, Rect},
+    prelude::{Buffer, Rect, Stylize},
     style::Style,
+    text::Line,
     widgets::{Block, Borders, Padding, Widget},
 };
 
@@ -10,9 +11,14 @@ use crate::append_files_form::AppendFilesForm;
 
 impl Widget for AppendFilesForm {
     fn render(mut self, area: Rect, buf: &mut Buffer) {
+        let title = Line::from(vec![
+            " Add Links to ".into(),
+            self.package_name.clone().bold(),
+            " ".into(),
+        ]);
         let container = Block::new()
             .padding(Padding::uniform(3))
-            .title(format!(" Add Links to {} ", self.package_name));
+            .title(title);
 
         let inner = container.inner(area);
 
