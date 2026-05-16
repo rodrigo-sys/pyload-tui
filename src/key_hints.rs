@@ -1,5 +1,3 @@
-use std::collections::BTreeMap;
-
 use ratatui::{
     layout::{Constraint, Flex, Layout},
     prelude::{Buffer, Color, Line, Rect, Span, Style},
@@ -7,11 +5,11 @@ use ratatui::{
 };
 
 pub struct KeyHints<'a> {
-    pub bindings: BTreeMap<&'a str, &'a str>,
+    pub bindings: &'a [(&'a str, &'a str)],
 }
 
 impl<'a> KeyHints<'a> {
-    pub fn new(bindings: BTreeMap<&'a str, &'a str>) -> Self {
+    pub const fn new(bindings: &'a [(&'a str, &'a str)]) -> Self {
         Self { bindings }
     }
 }
@@ -20,7 +18,7 @@ impl Widget for KeyHints<'_> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let mut line = Line::default();
 
-        for (key, action) in &self.bindings {
+        for (key, action) in self.bindings {
             let key_style = Style::default().fg(Color::Cyan);
             let action_style = Style::default().fg(Color::Gray);
 
