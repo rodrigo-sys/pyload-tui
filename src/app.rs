@@ -150,7 +150,7 @@ impl App {
                 ("Esc", "back"),
                 ("Tab", "next"),
                 ("Shift+Tab", "prev"),
-                ("Enter", "submit"),
+                ("Enter", "newline/submit"),
             ],
             _ => {
                 let mut binds = vec![
