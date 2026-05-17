@@ -1,10 +1,13 @@
 use crossterm::event::{self, DisableBracketedPaste, EnableBracketedPaste};
 use crossterm::execute;
+use pyload_tui::utils::ensure_app_config_exists;
 use pyload_tui::{app::App, key_hints::KeyHints, screens::CurrentScreen};
 use ratatui::layout::{Constraint, Direction, Layout};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    ensure_app_config_exists()?;
+
     let mut app = App::new().await;
 
     let mut terminal = ratatui::init();
