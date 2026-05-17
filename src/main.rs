@@ -33,7 +33,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let s = app.screens.add_package_form.as_mut().unwrap();
                     frame.render_widget(s.clone(), areas[0]);
                 }
-                _ => {}
+                CurrentScreen::AppendFilesForm => {
+                    let s = app.screens.append_files_form.as_mut().unwrap();
+                    frame.render_widget(s.clone(), areas[0]);
+                }
             }
 
             frame.render_widget(KeyHints::new(&app.get_bindings()), areas[1]);

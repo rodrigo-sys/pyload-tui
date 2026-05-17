@@ -2,6 +2,7 @@ use crossterm::event::{Event, KeyCode, KeyEvent};
 
 use crate::{
     add_package_form::AddPackageForm,
+    append_files_form::AppendFilesForm,
     app_action::AppAction,
     files_screen::FilesScreen,
     packages_screen::PackagesScreen,
@@ -22,6 +23,7 @@ impl App {
                 packages: Some(packages),
                 files: None,
                 add_package_form: None,
+                append_files_form: None,
             },
             current_screen: CurrentScreen::Packages,
             quit: false,
@@ -32,10 +34,18 @@ impl App {
         match event {
             Event::Key(key) => self.handle_key(key).await,
             Event::Paste(content) => {
-                if let CurrentScreen::AddPackageForm = self.current_screen
-                    && let Some(f) = self.screens.add_package_form.as_mut()
-                {
-                    f.handle_paste(&content);
+                match self.current_screen {
+                    CurrentScreen::AddPackageForm => {
+                        if let Some(f) = self.screens.add_package_form.as_mut() {
+                            f.handle_paste(&content);
+                        }
+                    }
+                    CurrentScreen::AppendFilesForm => {
+                        if let Some(f) = self.screens.append_files_form.as_mut() {
+                            f.handle_paste(&content);
+                        }
+                    }
+                    _ => {}
                 }
             }
             _ => {}
@@ -56,7 +66,10 @@ impl App {
                 let s = self.screens.add_package_form.as_mut().unwrap();
                 s.handle_keys(key).await
             }
-            _ => None,
+            CurrentScreen::AppendFilesForm => {
+                let s = self.screens.append_files_form.as_mut().unwrap();
+                s.handle_keys(key).await
+            }
         };
 
         if action.is_none() {
@@ -65,7 +78,7 @@ impl App {
                     (!matches!(self.current_screen, CurrentScreen::AddPackageForm))
                         .then_some(AppAction::Quit)
                 }
-                KeyCode::Char('a') => Some(AppAction::OpenAddPackageForm),
+                KeyCode::Char('A') => Some(AppAction::OpenAddPackageForm),
                 _ => None,
             };
         }
@@ -73,6 +86,7 @@ impl App {
         match action {
             Some(AppAction::Quit) => self.quit = true,
             Some(AppAction::OpenAddPackageForm) => self.go_to_add_package_form(),
+            Some(AppAction::OpenAppendFilesForm(pid, name)) => self.go_to_append_files_form(pid, name),
             Some(AppAction::GoToPackages) => self.go_to_packages(),
             Some(AppAction::GoToFiles(pid)) => self.go_to_files(pid).await,
             _ => {}
@@ -115,6 +129,15 @@ impl App {
         self.current_screen = CurrentScreen::Files;
     }
 
+    fn go_to_append_files_form(&mut self, pid: i32, name: String) {
+        if matches!(self.current_screen, CurrentScreen::AppendFilesForm) {
+            return;
+        }
+
+        self.screens.append_files_form = Some(AppendFilesForm::new(pid, name));
+        self.current_screen = CurrentScreen::AppendFilesForm;
+    }
+
     pub fn get_bindings(&self) -> Vec<(&'static str, &'static str)> {
         match self.current_screen {
             CurrentScreen::AddPackageForm => vec![
@@ -123,8 +146,16 @@ impl App {
                 ("Shift+Tab", "prev"),
                 ("Enter", "newline/toggle/submit"),
             ],
+            CurrentScreen::AppendFilesForm => vec![
+                ("Esc", "back"),
+                ("Tab", "next"),
+                ("Shift+Tab", "prev"),
+                ("Enter", "newline/submit"),
+            ],
             _ => {
                 let mut binds = vec![
+                    ("a", "add links"),
+                    ("A", "add package"),
                     ("l", "enter"),
                     ("j", "next item"),
                     ("k", "prev item"),
@@ -147,6 +178,7 @@ impl Default for App {
                 packages: Some(packages),
                 files: None,
                 add_package_form: None,
+                append_files_form: None,
             },
             current_screen: CurrentScreen::Packages,
             quit: false,
