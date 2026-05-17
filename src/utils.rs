@@ -1,5 +1,8 @@
 use std::collections::HashMap;
+use std::fs;
+use std::path::PathBuf;
 
+use dirs;
 use openapi::apis::Error;
 use openapi::apis::configuration::{ApiKey, Configuration};
 use openapi::apis::py_load_rest_api::{
@@ -10,6 +13,36 @@ use openapi::models::{
     ApiAddFilesPostRequest, ApiAddPackagePostRequest, ApiSetPackageDataPostRequest, Destination,
 };
 
+pub fn get_config_path() -> PathBuf {
+    let pkg_name = env!("CARGO_PKG_NAME");
+    let mut config_path = dirs::config_dir().unwrap();
+    config_path.push(pkg_name);
+    config_path.push("config.kdl");
+    config_path
+}
+pub fn create_app_config() -> Result<(), Box<dyn std::error::Error>> {
+    let path = get_config_path();
+
+    if let Some(dir) = path.parent() {
+        fs::create_dir_all(dir)?;
+    }
+
+    let config = r#"
+pyload-url "http://localhost:8000/"
+// api-key YOUR_API_KEY_HERE
+"#;
+
+    fs::write(path, config.trim())?;
+
+    Ok(())
+}
+pub fn ensure_app_config_exists() -> Result<(), Box<dyn std::error::Error>> {
+    if let Ok(exists) = fs::exists(get_config_path()) && !exists {
+        println!("NOT EXISTS");
+        create_app_config()?;
+    }
+    Ok(())
+}
 fn get_pyload_config() -> Configuration {
     let api_url = std::env::var("API_URL").unwrap_or_else(|_| "http://localhost:8000".to_string());
     let api_key = std::env::var("API_KEY").expect("API_KEY must be set");
