@@ -3,6 +3,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use dirs;
+use kdl::KdlDocument;
 use openapi::apis::Error;
 use openapi::apis::configuration::{ApiKey, Configuration};
 use openapi::apis::py_load_rest_api::{
@@ -37,15 +38,36 @@ pyload-url "http://localhost:8000/"
     Ok(())
 }
 pub fn ensure_app_config_exists() -> Result<(), Box<dyn std::error::Error>> {
-    if let Ok(exists) = fs::exists(get_config_path()) && !exists {
+    if let Ok(exists) = fs::exists(get_config_path())
+        && !exists
+    {
         println!("NOT EXISTS");
         create_app_config()?;
     }
     Ok(())
 }
-fn get_pyload_config() -> Configuration {
-    let api_url = std::env::var("API_URL").unwrap_or_else(|_| "http://localhost:8000".to_string());
-    let api_key = std::env::var("API_KEY").expect("API_KEY must be set");
+pub fn get_pyload_config() -> Configuration {
+    let app_config_path = get_config_path();
+    let config = fs::read_to_string(&app_config_path).unwrap();
+    let doc: KdlDocument = config.parse().unwrap();
+
+    let api_url: String = doc
+        .get("pyload-url")
+        .and_then(|n| n.entries().first())
+        .and_then(|e| e.value().as_string())
+        .unwrap_or("http://localhost:8000/")
+        .trim_end_matches('/')
+        .to_string();
+
+    let api_key: String = doc
+        .get("api-key")
+        .and_then(|n| n.entries().first())
+        .and_then(|e| e.value().as_string())
+        .expect(&format!(
+            "api-key is required in config: {}",
+            &app_config_path.display()
+        ))
+        .to_string();
 
     let mut config = Configuration::new();
     config.base_path = api_url;
@@ -90,7 +112,9 @@ pub async fn add_package(
     pkg.dest = Some(dest);
     let pid = api_add_package_post(&get_pyload_config(), Some(pkg)).await?;
 
-    if let Some(pw) = password && !pw.is_empty() {
+    if let Some(pw) = password
+        && !pw.is_empty()
+    {
         let data = HashMap::from([("password".to_string(), serde_json::Value::from(pw))]);
         let req = ApiSetPackageDataPostRequest::new(pid, data);
         let _ = api_set_package_data_post(&get_pyload_config(), Some(req)).await;
