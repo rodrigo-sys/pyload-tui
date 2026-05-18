@@ -8,10 +8,12 @@ use openapi::apis::Error;
 use openapi::apis::configuration::{ApiKey, Configuration};
 use openapi::apis::py_load_rest_api::{
     self, ApiAddFilesPostError, ApiAddPackagePostError, api_add_files_post, api_add_package_post,
-    api_set_package_data_post,
+    api_set_package_data_post, api_delete_files_post, api_delete_packages_post,
+    ApiDeleteFilesPostError, ApiDeletePackagesPostError,
 };
 use openapi::models::{
     ApiAddFilesPostRequest, ApiAddPackagePostRequest, ApiSetPackageDataPostRequest, Destination,
+    ApiDeleteFilesPostRequest, ApiDeletePackagesPostRequest,
 };
 
 pub fn get_config_path() -> PathBuf {
@@ -134,4 +136,9 @@ pub async fn add_links_to_package(
 pub async fn remove_packages(package_ids: Vec<i32>) -> Result<(), Error<ApiDeletePackagesPostError>>{
     let req = ApiDeletePackagesPostRequest::new(package_ids);
     api_delete_packages_post(&get_pyload_config(), Some(req)).await
+}
+
+pub async fn remove_files_from_package(file_ids: Vec<i32>) -> Result<(), Error<ApiDeleteFilesPostError>>{
+    let req = ApiDeleteFilesPostRequest::new(file_ids);
+    api_delete_files_post(&get_pyload_config(), Some(req)).await
 }
