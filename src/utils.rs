@@ -130,3 +130,8 @@ pub async fn add_links_to_package(
     let req = ApiAddFilesPostRequest::new(package_id, links);
     api_add_files_post(&get_pyload_config(), Some(req)).await
 }
+
+pub async fn remove_packages(package_ids: Vec<i32>) -> Result<(), Error<ApiDeletePackagesPostError>>{
+    let req = ApiDeletePackagesPostRequest::new(package_ids);
+    api_delete_packages_post(&get_pyload_config(), Some(req)).await
+}
