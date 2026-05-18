@@ -122,7 +122,7 @@ impl App {
             return;
         }
 
-        if self.screens.files.is_none() {
+        if self.screens.files.as_ref().is_none_or(|s| s.package_id != pid) {
             self.screens.files = Some(FilesScreen::new(pid).await);
         }
 
