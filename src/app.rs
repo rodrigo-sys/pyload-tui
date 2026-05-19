@@ -171,16 +171,16 @@ impl App {
             ],
             _ => {
                 let mut binds = vec![
-                    ("a", "add links"),
-                    ("A", "add package"),
-                    ("d", "delete"),
-                    ("l", "enter"),
                     ("j", "next item"),
                     ("k", "prev item"),
+                    ("l", "enter"),
                     ("q", "quit"),
+                    ("A", "add package"),
+                    ("a", "add links"),
+                    ("d", "delete"),
                 ];
                 if matches!(self.current_screen, CurrentScreen::Files) {
-                    binds.push(("h", "go back"));
+                    binds.insert(0,("h", "go back"));
                 }
                 binds
             }
