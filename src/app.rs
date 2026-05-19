@@ -7,7 +7,7 @@ use crate::{
     files_screen::FilesScreen,
     packages_screen::PackagesScreen,
     screens::{CurrentScreen, Screens},
-    utils::remove_packages,
+    utils::{remove_files_from_package, remove_packages},
 };
 
 pub struct App {
@@ -95,6 +95,14 @@ impl App {
                     // remove corresponding item from UI table
                     if let Some(packages_screen) = self.screens.packages.as_mut() {
                         packages_screen.packages.remove(index);
+                    }
+                }
+            }
+            Some(AppAction::DeleteFiles(files)) => {
+                if let Some(&(index, file_id)) = files.first() {
+                    let _ = remove_files_from_package(vec![file_id]).await;
+                    if let Some(files_screen) = self.screens.files.as_mut() {
+                        files_screen.files.remove(index);
                     }
                 }
             }
