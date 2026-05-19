@@ -173,6 +173,7 @@ impl App {
                 let mut binds = vec![
                     ("a", "add links"),
                     ("A", "add package"),
+                    ("d", "delete"),
                     ("l", "enter"),
                     ("j", "next item"),
                     ("k", "prev item"),
