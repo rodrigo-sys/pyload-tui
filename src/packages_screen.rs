@@ -1,14 +1,12 @@
 use crossterm::event::{KeyCode, KeyEvent};
-use openapi::models::PackageData;
+use openapi::{apis::py_load_rest_api::api_get_events_get, models::PackageData};
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
     widgets::{StatefulWidget, TableState},
 };
 
-use crate::{
-    app_action::AppAction, table::PackagesTable, utils::fetch_packages,
-};
+use crate::{app_action::AppAction, table::PackagesTable, utils::fetch_packages};
 
 #[derive(Clone)]
 pub struct PackagesScreen {
@@ -32,6 +30,11 @@ impl PackagesScreen {
                 let index = self.table_state.selected().unwrap();
                 let pkg = &self.packages[index];
                 Some(AppAction::OpenAppendFilesForm(pkg.pid, pkg.name.clone()))
+            }
+            KeyCode::Char('d') => {
+                let package_index = self.table_state.selected()?;
+                let package = &self.packages[package_index];
+                Some(AppAction::DeletePackages(vec![(package_index, package.pid)]))
             }
             KeyCode::Char('l') => {
                 let index = self.table_state.selected().unwrap();
@@ -72,3 +75,4 @@ impl StatefulWidget for PackagesScreen {
         );
     }
 }
+

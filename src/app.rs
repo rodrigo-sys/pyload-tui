@@ -2,11 +2,12 @@ use crossterm::event::{Event, KeyCode, KeyEvent};
 
 use crate::{
     add_package_form::AddPackageForm,
-    append_files_form::AppendFilesForm,
     app_action::AppAction,
+    append_files_form::AppendFilesForm,
     files_screen::FilesScreen,
     packages_screen::PackagesScreen,
     screens::{CurrentScreen, Screens},
+    utils::remove_packages,
 };
 
 pub struct App {
@@ -33,21 +34,19 @@ impl App {
     pub async fn handle_events(&mut self, event: Event) {
         match event {
             Event::Key(key) => self.handle_key(key).await,
-            Event::Paste(content) => {
-                match self.current_screen {
-                    CurrentScreen::AddPackageForm => {
-                        if let Some(f) = self.screens.add_package_form.as_mut() {
-                            f.handle_paste(&content);
-                        }
+            Event::Paste(content) => match self.current_screen {
+                CurrentScreen::AddPackageForm => {
+                    if let Some(f) = self.screens.add_package_form.as_mut() {
+                        f.handle_paste(&content);
                     }
-                    CurrentScreen::AppendFilesForm => {
-                        if let Some(f) = self.screens.append_files_form.as_mut() {
-                            f.handle_paste(&content);
-                        }
-                    }
-                    _ => {}
                 }
-            }
+                CurrentScreen::AppendFilesForm => {
+                    if let Some(f) = self.screens.append_files_form.as_mut() {
+                        f.handle_paste(&content);
+                    }
+                }
+                _ => {}
+            },
             _ => {}
         }
     }
@@ -89,6 +88,16 @@ impl App {
             Some(AppAction::OpenAppendFilesForm(pid, name)) => self.go_to_append_files_form(pid, name),
             Some(AppAction::GoToPackages) => self.go_to_packages(),
             Some(AppAction::GoToFiles(pid)) => self.go_to_files(pid).await,
+            Some(AppAction::DeletePackages(packages)) => {
+                if let Some(&(index, package_id)) = packages.first() {
+                    // remove package itself
+                    let _ = remove_packages(vec![package_id]).await;
+                    // remove corresponding item from UI table
+                    if let Some(packages_screen) = self.screens.packages.as_mut() {
+                        packages_screen.packages.remove(index);
+                    }
+                }
+            }
             _ => {}
         }
     }

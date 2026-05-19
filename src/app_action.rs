@@ -4,4 +4,5 @@ pub enum AppAction {
     GoToFiles(i32),
     OpenAddPackageForm,
     OpenAppendFilesForm(i32, String),
+    DeletePackages(Vec<(usize, i32)>),
 }
