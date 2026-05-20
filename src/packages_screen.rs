@@ -38,8 +38,8 @@ impl PackagesScreen {
             }
             KeyCode::Char('l') => {
                 let index = self.table_state.selected().unwrap();
-                let pid = self.packages[index].pid;
-                Some(AppAction::GoToFiles(pid))
+                let pkg = &self.packages[index];
+                Some(AppAction::GoToFiles(pkg.pid, pkg.name.clone()))
             }
             KeyCode::Char('j') => {
                 self.table_state.select_next();

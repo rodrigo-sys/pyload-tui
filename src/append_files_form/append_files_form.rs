@@ -38,7 +38,7 @@ impl AppendFilesForm {
 
     pub async fn handle_keys(&mut self, key: KeyEvent) -> Option<AppAction> {
         match key.code {
-            KeyCode::Esc => Some(AppAction::GoToPackages),
+            KeyCode::Esc => Some(AppAction::GoToPreviousScreen),
             KeyCode::Tab => {
                 self.selected = self.selected.next();
                 None
@@ -77,7 +77,7 @@ impl AppendFilesForm {
         }
 
         add_links_to_package(self.package_id, links).await.ok()?;
-        Some(AppAction::GoToPackages)
+        Some(AppAction::GoToPreviousScreen)
     }
 
     pub fn handle_paste(&mut self, content: &str) {

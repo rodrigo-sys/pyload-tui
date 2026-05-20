@@ -1,7 +1,7 @@
 pub enum AppAction {
     Quit,
     GoToPackages,
-    GoToFiles(i32),
+    GoToFiles(i32, String),
     GoToPreviousScreen,
     OpenAddPackageForm,
     OpenAppendFilesForm(i32, String),

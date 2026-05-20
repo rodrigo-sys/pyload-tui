@@ -89,7 +89,7 @@ impl App {
                 self.go_to_append_files_form(pid, name)
             }
             Some(AppAction::GoToPackages) => self.go_to_packages(),
-            Some(AppAction::GoToFiles(pid)) => self.go_to_files(pid).await,
+            Some(AppAction::GoToFiles(pid, name)) => self.go_to_files(pid, name).await,
             Some(AppAction::DeletePackages(packages)) => {
                 if let Some(&(index, package_id)) = packages.first() {
                     // remove package itself
@@ -151,13 +151,13 @@ impl App {
         self.current_screen = Screen::Packages;
     }
 
-    async fn go_to_files(&mut self, pid: i32) {
+    async fn go_to_files(&mut self, pid: i32, name: String) {
         if matches!(self.current_screen, Screen::Files) {
             return;
         }
 
         if self.screens.files.as_ref().is_none_or(|s| s.package_id != pid) {
-            self.screens.files = Some(FilesScreen::new(pid).await);
+            self.screens.files = Some(FilesScreen::new(pid, name).await);
         }
 
         self.previous_screen = Some(self.current_screen);
