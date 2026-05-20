@@ -62,7 +62,7 @@ impl Default for AddPackageForm {
 impl AddPackageForm {
     pub async fn handle_keys(&mut self, key: KeyEvent) -> Option<AppAction> {
         match key.code {
-            KeyCode::Esc => Some(AppAction::GoToPackages),
+            KeyCode::Esc => Some(AppAction::GoToPreviousScreen),
             KeyCode::Tab => {
                 self.selected = self.selected.next();
                 None
