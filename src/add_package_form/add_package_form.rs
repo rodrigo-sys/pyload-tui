@@ -112,7 +112,7 @@ impl AddPackageForm {
         };
 
         add_package(name, links, password, dest).await.ok()?;
-        Some(AppAction::GoToPackages)
+        Some(AppAction::GoToPreviousScreen)
     }
 
     pub fn handle_paste(&mut self, content: &str) {

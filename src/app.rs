@@ -108,6 +108,9 @@ impl App {
                     }
                 }
             }
+            Some(AppAction::GoToPreviousScreen) => {
+                self.go_to_previous_screen();
+            }
             _ => {}
         }
     }
