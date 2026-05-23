@@ -41,9 +41,8 @@ impl FilesScreen {
                 None
             }
             KeyCode::Char('d') => {
-                let file_index = self.table_state.selected()?;
-                let file = &self.files[file_index];
-                Some(AppAction::DeleteFiles(vec![(file_index, file.fid)]))
+                let file = self.table_state.selected()?;
+                Some(AppAction::DeleteFiles(vec![self.files[file].fid]))
             }
             _ => None,
         }

@@ -32,9 +32,8 @@ impl PackagesScreen {
                 Some(AppAction::OpenAppendFilesForm(pkg.pid, pkg.name.clone()))
             }
             KeyCode::Char('d') => {
-                let package_index = self.table_state.selected()?;
-                let package = &self.packages[package_index];
-                Some(AppAction::DeletePackages(vec![(package_index, package.pid)]))
+                let index = self.table_state.selected()?;
+                Some(AppAction::DeletePackages(vec![self.packages[index].pid]))
             }
             KeyCode::Char('l') => {
                 let index = self.table_state.selected().unwrap();

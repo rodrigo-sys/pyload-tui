@@ -91,21 +91,13 @@ impl App {
             Some(AppAction::GoToPackages) => self.go_to_packages(),
             Some(AppAction::GoToFiles(pid, name)) => self.go_to_files(pid, name).await,
             Some(AppAction::DeletePackages(packages)) => {
-                if let Some(&(index, package_id)) = packages.first() {
-                    // remove package itself
-                    let _ = remove_packages(vec![package_id]).await;
-                    // remove corresponding item from UI table
-                    if let Some(packages_screen) = self.screens.packages.as_mut() {
-                        packages_screen.packages.remove(index);
-                    }
+                if let Some(package_id) = packages.first() {
+                    let _ = remove_packages(vec![*package_id]).await;
                 }
             }
             Some(AppAction::DeleteFiles(files)) => {
-                if let Some(&(index, file_id)) = files.first() {
-                    let _ = remove_files_from_package(vec![file_id]).await;
-                    if let Some(files_screen) = self.screens.files.as_mut() {
-                        files_screen.files.remove(index);
-                    }
+                if let Some(file_id) = files.first() {
+                    let _ = remove_files_from_package(vec![*file_id]).await;
                 }
             }
             Some(AppAction::GoToPreviousScreen) => {

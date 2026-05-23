@@ -5,6 +5,6 @@ pub enum AppAction {
     GoToPreviousScreen,
     OpenAddPackageForm,
     OpenAppendFilesForm(i32, String),
-    DeletePackages(Vec<(usize, i32)>),
-    DeleteFiles(Vec<(usize, i32)>),
+    DeletePackages(Vec<i32>),
+    DeleteFiles(Vec<i32>),
 }
