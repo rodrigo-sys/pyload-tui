@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
+use std::sync::OnceLock;
 
 use dirs;
 use kdl::KdlDocument;
@@ -48,44 +49,47 @@ pub fn ensure_app_config_exists() -> Result<(), Box<dyn std::error::Error>> {
     }
     Ok(())
 }
-pub fn get_pyload_config() -> Configuration {
-    let app_config_path = get_config_path();
-    let config = fs::read_to_string(&app_config_path).unwrap();
-    let doc: KdlDocument = config.parse().unwrap();
+pub fn get_pyload_config() -> &'static Configuration {
+    static CONFIG: OnceLock<Configuration> = OnceLock::new();
+    CONFIG.get_or_init(|| {
+        let app_config_path = get_config_path();
+        let config = fs::read_to_string(&app_config_path).unwrap();
+        let doc: KdlDocument = config.parse().unwrap();
 
-    let api_url: String = doc
-        .get("pyload-url")
-        .and_then(|n| n.entries().first())
-        .and_then(|e| e.value().as_string())
-        .unwrap_or("http://localhost:8000/")
-        .trim_end_matches('/')
-        .to_string();
+        let api_url: String = doc
+            .get("pyload-url")
+            .and_then(|n| n.entries().first())
+            .and_then(|e| e.value().as_string())
+            .unwrap_or("http://localhost:8000/")
+            .trim_end_matches('/')
+            .to_string();
 
-    let api_key: String = doc
-        .get("api-key")
-        .and_then(|n| n.entries().first())
-        .and_then(|e| e.value().as_string())
-        .expect(&format!(
-            "api-key is required in config: {}",
-            &app_config_path.display()
-        ))
-        .to_string();
+        let api_key: String = doc
+            .get("api-key")
+            .and_then(|n| n.entries().first())
+            .and_then(|e| e.value().as_string())
+            .expect(&format!(
+                "api-key is required in config: {}",
+                &app_config_path.display()
+            ))
+            .to_string();
 
-    let mut config = Configuration::new();
-    config.base_path = api_url;
-    config.api_key = Some(ApiKey {
-        key: api_key,
-        prefix: None,
-    });
-    config
+        let mut config = Configuration::new();
+        config.base_path = api_url;
+        config.api_key = Some(ApiKey {
+            key: api_key,
+            prefix: None,
+        });
+        config
+    })
 }
 
 pub async fn fetch_packages() -> Result<Vec<openapi::models::PackageData>, String> {
-    let mut queue = py_load_rest_api::api_get_queue_get(&get_pyload_config())
+    let mut queue = py_load_rest_api::api_get_queue_get(get_pyload_config())
         .await
         .map_err(|e| e.to_string())?;
 
-    let collector = py_load_rest_api::api_get_collector_get(&get_pyload_config())
+    let collector = py_load_rest_api::api_get_collector_get(get_pyload_config())
         .await
         .map_err(|e| e.to_string())?;
 
@@ -95,7 +99,7 @@ pub async fn fetch_packages() -> Result<Vec<openapi::models::PackageData>, Strin
 }
 
 pub async fn fetch_files(package_id: i32) -> Result<Vec<openapi::models::FileData>, String> {
-    let pkg = py_load_rest_api::api_get_package_data_get(&get_pyload_config(), Some(package_id))
+    let pkg = py_load_rest_api::api_get_package_data_get(get_pyload_config(), Some(package_id))
         .await
         .map_err(|e| e.to_string())?;
 
@@ -112,14 +116,14 @@ pub async fn add_package(
 ) -> Result<i32, Error<ApiAddPackagePostError>> {
     let mut pkg = ApiAddPackagePostRequest::new(name, links);
     pkg.dest = Some(dest);
-    let pid = api_add_package_post(&get_pyload_config(), Some(pkg)).await?;
+    let pid = api_add_package_post(get_pyload_config(), Some(pkg)).await?;
 
     if let Some(pw) = password
         && !pw.is_empty()
     {
         let data = HashMap::from([("password".to_string(), serde_json::Value::from(pw))]);
         let req = ApiSetPackageDataPostRequest::new(pid, data);
-        let _ = api_set_package_data_post(&get_pyload_config(), Some(req)).await;
+        let _ = api_set_package_data_post(get_pyload_config(), Some(req)).await;
     }
 
     Ok(pid)
@@ -130,15 +134,15 @@ pub async fn add_links_to_package(
     links: Vec<String>,
 ) -> Result<(), Error<ApiAddFilesPostError>> {
     let req = ApiAddFilesPostRequest::new(package_id, links);
-    api_add_files_post(&get_pyload_config(), Some(req)).await
+    api_add_files_post(get_pyload_config(), Some(req)).await
 }
 
 pub async fn remove_packages(package_ids: Vec<i32>) -> Result<(), Error<ApiDeletePackagesPostError>>{
     let req = ApiDeletePackagesPostRequest::new(package_ids);
-    api_delete_packages_post(&get_pyload_config(), Some(req)).await
+    api_delete_packages_post(get_pyload_config(), Some(req)).await
 }
 
 pub async fn remove_files_from_package(file_ids: Vec<i32>) -> Result<(), Error<ApiDeleteFilesPostError>>{
     let req = ApiDeleteFilesPostRequest::new(file_ids);
-    api_delete_files_post(&get_pyload_config(), Some(req)).await
+    api_delete_files_post(get_pyload_config(), Some(req)).await
 }
