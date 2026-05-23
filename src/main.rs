@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crossterm::event::{self, DisableBracketedPaste, EnableBracketedPaste};
 use crossterm::execute;
 use pyload_tui::utils::ensure_app_config_exists;
@@ -9,6 +11,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ensure_app_config_exists()?;
 
     let mut app = App::new().await;
+    let tick_rate = Duration::from_millis(100);
 
     let mut terminal = ratatui::init();
     execute!(std::io::stdout(), EnableBracketedPaste)?;
@@ -20,7 +23,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     while !app.quit {
         terminal.draw(|frame| {
-
             let areas = layout.split(frame.area());
 
             match &mut app.current_screen {
@@ -45,7 +47,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             frame.render_widget(KeyHints::new(&app.get_bindings()), areas[1]);
         })?;
 
-        app.handle_events(event::read()?).await;
+        if event::poll(tick_rate)? {
+            app.handle_events(event::read()?).await;
+        }
     }
 
     execute!(std::io::stdout(), DisableBracketedPaste)?;
