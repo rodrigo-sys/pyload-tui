@@ -10,11 +10,13 @@ use openapi::apis::configuration::{ApiKey, Configuration};
 use openapi::apis::py_load_rest_api::{
     self, ApiAddFilesPostError, ApiAddPackagePostError, api_add_files_post, api_add_package_post,
     api_set_package_data_post, api_delete_files_post, api_delete_packages_post,
+    api_get_file_data_get, api_get_package_data_get,
     ApiDeleteFilesPostError, ApiDeletePackagesPostError,
+    ApiGetFileDataGetError, ApiGetPackageDataGetError,
 };
 use openapi::models::{
     ApiAddFilesPostRequest, ApiAddPackagePostRequest, ApiSetPackageDataPostRequest, Destination,
-    ApiDeleteFilesPostRequest, ApiDeletePackagesPostRequest,
+    ApiDeleteFilesPostRequest, ApiDeletePackagesPostRequest, FileData, PackageData,
 };
 
 pub fn get_config_path() -> PathBuf {
@@ -98,10 +100,20 @@ pub async fn fetch_packages() -> Result<Vec<openapi::models::PackageData>, Strin
     Ok(queue)
 }
 
+pub async fn fetch_package_data(
+    package_id: i32,
+) -> Result<PackageData, Error<ApiGetPackageDataGetError>> {
+    api_get_package_data_get(get_pyload_config(), Some(package_id)).await
+}
+
+pub async fn fetch_file_data(
+    file_id: i32,
+) -> Result<FileData, Error<ApiGetFileDataGetError>> {
+    api_get_file_data_get(get_pyload_config(), Some(file_id)).await
+}
+
 pub async fn fetch_files(package_id: i32) -> Result<Vec<openapi::models::FileData>, String> {
-    let pkg = py_load_rest_api::api_get_package_data_get(get_pyload_config(), Some(package_id))
-        .await
-        .map_err(|e| e.to_string())?;
+    let pkg = fetch_package_data(package_id).await.map_err(|e| e.to_string())?;
 
     pkg.links
         .flatten()
