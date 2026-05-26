@@ -1,4 +1,5 @@
 use crossterm::event::{Event, KeyCode, KeyEvent};
+use openapi::models::EventInfo;
 
 use crate::{
     add_package_form::AddPackageForm,
@@ -7,7 +8,10 @@ use crate::{
     files_screen::FilesScreen,
     packages_screen::PackagesScreen,
     screens::{Screen, Screens},
-    utils::{remove_files_from_package, remove_packages},
+    utils::{
+        fetch_file_data, fetch_files, fetch_package_data, fetch_packages,
+        remove_files_from_package, remove_packages,
+    },
 };
 
 pub struct App {
@@ -107,9 +111,116 @@ impl App {
         }
     }
 
+    pub async fn handle_pyload_events(&mut self, event: EventInfo) {
+        let event_id = event.id.flatten();
+        let event_type = event.r#type.flatten();
+
+        match event.eventname.as_str() {
+            "update" => match (event_type, event_id) {
+                (Some(0), Some(pid)) => {
+                    let Some(screen) = &mut self.screens.packages else {
+                        return;
+                    };
+                    let Ok(package) = fetch_package_data(pid).await else {
+                        return;
+                    };
+                    let Some(position) = screen.packages.iter().position(|p| p.pid == pid) else {
+                        return;
+                    };
+
+                    screen.packages[position] = package;
+                }
+                (Some(1), Some(fid)) => {
+                    let Ok(file) = fetch_file_data(fid).await else {
+                        return;
+                    };
+                    let Some(files_screen) = &mut self.screens.files else {
+                        return;
+                    };
+                    if files_screen.package_id != file.package_id {
+                        return;
+                    }
+                    let Some(position) = files_screen.files.iter().position(|f| f.fid == fid)
+                    else {
+                        return;
+                    };
+
+                    files_screen.files[position] = file;
+                }
+                _ => {}
+            },
+            "remove" => match (event_type, event_id) {
+                (Some(0), Some(pid)) => {
+                    let Some(screen) = &mut self.screens.packages else {
+                        return;
+                    };
+                    let Some(pos) = screen.packages.iter().position(|p| p.pid == pid) else {
+                        return;
+                    };
+
+                    screen.packages.remove(pos);
+                }
+                (Some(1), Some(fid)) => {
+                    let Some(files_screen) = &mut self.screens.files else {
+                        return;
+                    };
+                    let Some(pos) = files_screen.files.iter().position(|f| f.fid == fid) else {
+                        return;
+                    };
+
+                    files_screen.files.remove(pos);
+                }
+                _ => {}
+            },
+            "insert" => match (event_type, event_id) {
+                (Some(0), Some(pid)) => {
+                    let Some(screen) = &mut self.screens.packages else {
+                        return;
+                    };
+                    let Ok(package) = fetch_package_data(pid).await else {
+                        return;
+                    };
+                    let position = screen.packages.partition_point(|p| p.order < package.order);
+
+                    screen.packages.insert(position, package);
+                }
+                (Some(1), Some(fid)) => {
+                    let Ok(file) = fetch_file_data(fid).await else {
+                        return;
+                    };
+                    let Some(files_screen) = &mut self.screens.files else {
+                        return;
+                    };
+                    if files_screen.package_id != file.package_id {
+                        return;
+                    }
+                    let Ok(files) = fetch_files(file.package_id).await else {
+                        return;
+                    };
+
+                    files_screen.files = files;
+                }
+                _ => {}
+            },
+            "reload" => {
+                if let Some(screen) = &mut self.screens.packages
+                    && let Ok(packages) = fetch_packages().await
+                {
+                    screen.packages = packages;
+                    screen.table_state.select_first();
+                }
+            }
+            _ => {}
+        }
+    }
+
     fn go_to_previous_screen(&mut self) {
-        if self.previous_screen.as_ref().is_none_or(|s| &self.current_screen == s){
-            return
+        if self
+            .previous_screen
+            .as_ref()
+            .is_none_or(|s| &self.current_screen == s)
+        {
+            return;
         }
 
         let prev = self.previous_screen.take().unwrap();
@@ -148,7 +259,12 @@ impl App {
             return;
         }
 
-        if self.screens.files.as_ref().is_none_or(|s| s.package_id != pid) {
+        if self
+            .screens
+            .files
+            .as_ref()
+            .is_none_or(|s| s.package_id != pid)
+        {
             self.screens.files = Some(FilesScreen::new(pid, name).await);
         }
 
