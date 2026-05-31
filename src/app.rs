@@ -128,7 +128,17 @@ impl App {
                         return;
                     };
 
+                    // re-fetch files if link count changed for a cached package
+                    if let Some(fs) = &mut self.screens.files
+                        && fs.package_id == pid
+                        && screen.packages[position].linkstotal.flatten() != package.linkstotal.flatten()
+                        && let Ok(files) = fetch_files(pid).await
+                    {
+                        fs.files = files;
+                    }
+
                     screen.packages[position] = package;
+
                 }
                 (Some(1), Some(fid)) => {
                     let Ok(file) = fetch_file_data(fid).await else {
@@ -164,7 +174,8 @@ impl App {
                     let Some(files_screen) = &mut self.screens.files else {
                         return;
                     };
-                    let Some(position) = files_screen.files.iter().position(|f| f.fid == fid) else {
+                    let Some(position) = files_screen.files.iter().position(|f| f.fid == fid)
+                    else {
                         return;
                     };
 
