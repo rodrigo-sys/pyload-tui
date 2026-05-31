@@ -128,6 +128,15 @@ impl App {
                         return;
                     };
 
+                    // re-fetch files if link count changed for a cached package
+                    if let Some(files_screen) = &mut self.screens.files
+                        && files_screen.package_id == pid
+                        && screen.packages[position].linkstotal.flatten() != package.linkstotal.flatten()
+                        && let Ok(files) = fetch_files(pid).await
+                    {
+                        files_screen.files = files;
+                    }
+
                     screen.packages[position] = package;
                 }
                 (Some(1), Some(fid)) => {
