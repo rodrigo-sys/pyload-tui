@@ -155,6 +155,7 @@ impl App {
                     };
 
                     files_screen.files[position] = file;
+                    files_screen.refresh_downloads_info().await;
                 }
                 _ => {}
             },

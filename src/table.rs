@@ -1,4 +1,4 @@
-use openapi::models::{FileData, PackageData};
+use openapi::models::{DownloadInfo, FileData, PackageData};
 use ratatui::layout::Constraint;
 use ratatui::style::{Color, Style};
 use ratatui::widgets::{Cell, Row, Table};
@@ -54,18 +54,38 @@ impl From<Vec<PackageData>> for PackagesTable {
     }
 }
 
-impl From<Vec<FileData>> for FilesTable {
-    fn from(files: Vec<FileData>) -> Self {
+impl From<(Vec<FileData>, Vec<DownloadInfo>)> for FilesTable {
+    fn from((files, downloads): (Vec<FileData>, Vec<DownloadInfo>)) -> Self {
         let rows: Vec<Row<'static>> = files
             .into_iter()
             .map(|f| {
+                let dl = downloads.iter().find(|d| d.fid == f.fid);
+
+                let size = f.format_size.clone();
+
+                let speed = dl
+                    .filter(|d| d.speed > 0)
+                    .map(|d| format!("{}/s", format_bytes(d.speed)))
+                    .unwrap_or_default();
+
+                let progress = dl
+                    .filter(|d| d.percent > 0)
+                    .map(|d| format!("{:.1}%", d.percent))
+                    .unwrap_or_default();
+
+                let eta = dl
+                    .map(|d| d.format_eta.clone())
+                    .filter(|s| !s.is_empty())
+                    .unwrap_or_default();
+
                 Row::new(vec![
                     Cell::from(f.fid.to_string()),
                     Cell::from(f.name),
-                    Cell::from(f.format_size.clone()),
+                    Cell::from(size),
                     Cell::from(format!("{:?}", f.status)),
-                    Cell::from(f.plugin),
-                    Cell::from(f.error),
+                    Cell::from(speed),
+                    Cell::from(progress),
+                    Cell::from(eta),
                 ])
             })
             .collect();
@@ -75,8 +95,9 @@ impl From<Vec<FileData>> for FilesTable {
             Cell::from("Name"),
             Cell::from("Size"),
             Cell::from("Status"),
-            Cell::from("Plugin"),
-            Cell::from("Error"),
+            Cell::from("Speed"),
+            Cell::from("%"),
+            Cell::from("ETA"),
         ])
         .style(ratatui::style::Style::default().add_modifier(ratatui::style::Modifier::BOLD));
 
@@ -85,8 +106,9 @@ impl From<Vec<FileData>> for FilesTable {
             Constraint::Min(25),
             Constraint::Length(12),
             Constraint::Length(12),
-            Constraint::Length(15),
-            Constraint::Min(10),
+            Constraint::Length(12),
+            Constraint::Length(8),
+            Constraint::Length(10),
         ];
 
         let table = Table::new(rows, widths).header(header).row_highlight_style(HIGHLIGHT_STYLE);
