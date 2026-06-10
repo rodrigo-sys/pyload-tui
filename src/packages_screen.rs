@@ -6,7 +6,9 @@ use ratatui::{
     widgets::{StatefulWidget, TableState},
 };
 
-use crate::{app_action::AppAction, table::PackagesTable, utils::fetch_packages};
+use crate::{
+    app_action::AppAction, screens::ScreenHandler, table::PackagesTable, utils::fetch_packages,
+};
 
 #[derive(Clone)]
 pub struct PackagesScreen {
@@ -22,8 +24,10 @@ impl PackagesScreen {
             table_state: TableState::new().with_selected(0),
         }
     }
+}
 
-    pub async fn handle_keys(&mut self, key: KeyEvent) -> Option<AppAction> {
+impl ScreenHandler for PackagesScreen {
+    async fn handle_keys(&mut self, key: KeyEvent) -> Option<AppAction> {
         match key.code {
             KeyCode::Char('q') => Some(AppAction::Quit),
             KeyCode::Char('a') => {
@@ -51,6 +55,7 @@ impl PackagesScreen {
             _ => None,
         }
     }
+
 }
 
 impl Default for PackagesScreen {

@@ -7,7 +7,7 @@ use crate::{
     append_files_form::AppendFilesForm,
     files_screen::FilesScreen,
     packages_screen::PackagesScreen,
-    screens::Screen,
+    screens::{Screen, ScreenHandler},
     utils::{
         fetch_file_data, fetch_files, fetch_package_data, fetch_packages,
         remove_files_from_package, remove_packages,
@@ -45,22 +45,13 @@ impl App {
     pub async fn handle_events(&mut self, event: Event) {
         match event {
             Event::Key(key) => self.handle_key(key).await,
-            Event::Paste(content) => match &mut self.current_screen {
-                Screen::AddPackageForm(f) => f.handle_paste(&content),
-                Screen::AppendFilesForm(f) => f.handle_paste(&content),
-                _ => {}
-            },
+            Event::Paste(content) => self.current_screen.handle_paste(&content),
             _ => {}
         }
     }
 
     pub async fn handle_key(&mut self, key: KeyEvent) {
-        let mut action = match &mut self.current_screen {
-            Screen::Packages(s) => s.handle_keys(key).await,
-            Screen::Files(s) => s.handle_keys(key).await,
-            Screen::AddPackageForm(s) => s.handle_keys(key).await,
-            Screen::AppendFilesForm(s) => s.handle_keys(key).await,
-        };
+        let mut action = self.current_screen.handle_keys(key).await;
 
         if action.is_none() {
             action = match key.code {

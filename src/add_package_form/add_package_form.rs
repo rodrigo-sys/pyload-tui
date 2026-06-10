@@ -8,7 +8,7 @@ use ratatui_textarea::TextArea;
 use tui_checkbox::Checkbox;
 
 use super::SelectedInput;
-use crate::{app_action::AppAction, utils::add_package};
+use crate::{app_action::AppAction, screens::ScreenHandler, utils::add_package};
 
 use ratatui::layout::HorizontalAlignment;
 use ratatui::text::Line;
@@ -59,8 +59,8 @@ impl Default for AddPackageForm {
     }
 }
 
-impl AddPackageForm {
-    pub async fn handle_keys(&mut self, key: KeyEvent) -> Option<AppAction> {
+impl ScreenHandler for AddPackageForm {
+    async fn handle_keys(&mut self, key: KeyEvent) -> Option<AppAction> {
         match key.code {
             KeyCode::Esc => Some(AppAction::GoToPreviousScreen),
             KeyCode::Tab => {
@@ -89,6 +89,24 @@ impl AddPackageForm {
         }
     }
 
+    fn handle_paste(&mut self, content: &str) {
+        match self.selected {
+            SelectedInput::Name => {
+                self.name.insert_str(content);
+            }
+            SelectedInput::Links => {
+                self.links.insert_str(content);
+            }
+            SelectedInput::Password => {
+                self.password.insert_str(content);
+            }
+            _ => {}
+        }
+    }
+
+}
+
+impl AddPackageForm {
     async fn submit(&self) -> Option<AppAction> {
         let name = self.name.lines().join("\n");
 
@@ -113,15 +131,6 @@ impl AddPackageForm {
 
         add_package(name, links, password, dest).await.ok()?;
         Some(AppAction::GoToPreviousScreen)
-    }
-
-    pub fn handle_paste(&mut self, content: &str) {
-        match self.selected {
-            SelectedInput::Name => { self.name.insert_str(content); }
-            SelectedInput::Links => { self.links.insert_str(content); }
-            SelectedInput::Password => { self.password.insert_str(content); }
-            _ => {}
-        }
     }
 
     fn handle_text_input(&mut self, key: KeyEvent) {

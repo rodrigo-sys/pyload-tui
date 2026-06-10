@@ -7,7 +7,7 @@ use ratatui::layout::HorizontalAlignment;
 use ratatui_textarea::TextArea;
 
 use super::SelectedInput;
-use crate::{app_action::AppAction, utils::add_links_to_package};
+use crate::{app_action::AppAction, screens::ScreenHandler, utils::add_links_to_package};
 
 #[derive(Clone)]
 pub struct AppendFilesForm {
@@ -18,25 +18,8 @@ pub struct AppendFilesForm {
     pub selected: SelectedInput,
 }
 
-impl AppendFilesForm {
-    pub fn new(package_id: i32, package_name: String) -> Self {
-        Self {
-            package_id,
-            package_name,
-            links: TextArea::default(),
-            submit: Paragraph::new("Add links")
-                .alignment(HorizontalAlignment::Center)
-                .block(
-                    Block::new()
-                        .borders(Borders::ALL)
-                        .border_style(Color::Green)
-                        .style(Style::new().fg(Color::Green)),
-                ),
-            selected: SelectedInput::default(),
-        }
-    }
-
-    pub async fn handle_keys(&mut self, key: KeyEvent) -> Option<AppAction> {
+impl ScreenHandler for AppendFilesForm {
+    async fn handle_keys(&mut self, key: KeyEvent) -> Option<AppAction> {
         match key.code {
             KeyCode::Esc => Some(AppAction::GoToPreviousScreen),
             KeyCode::Tab => {
@@ -63,6 +46,32 @@ impl AppendFilesForm {
         }
     }
 
+    fn handle_paste(&mut self, content: &str) {
+        if self.selected == SelectedInput::Links {
+            self.links.insert_str(content);
+        }
+    }
+
+}
+
+impl AppendFilesForm {
+    pub fn new(package_id: i32, package_name: String) -> Self {
+        Self {
+            package_id,
+            package_name,
+            links: TextArea::default(),
+            submit: Paragraph::new("Add links")
+                .alignment(HorizontalAlignment::Center)
+                .block(
+                    Block::new()
+                        .borders(Borders::ALL)
+                        .border_style(Color::Green)
+                        .style(Style::new().fg(Color::Green)),
+                ),
+            selected: SelectedInput::default(),
+        }
+    }
+
     async fn submit(&self) -> Option<AppAction> {
         let links: Vec<String> = self
             .links
@@ -78,11 +87,5 @@ impl AppendFilesForm {
 
         add_links_to_package(self.package_id, links).await.ok()?;
         Some(AppAction::GoToPreviousScreen)
-    }
-
-    pub fn handle_paste(&mut self, content: &str) {
-        if self.selected == SelectedInput::Links {
-            self.links.insert_str(content);
-        }
     }
 }

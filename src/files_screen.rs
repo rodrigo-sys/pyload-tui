@@ -6,7 +6,10 @@ use ratatui::{
     widgets::{StatefulWidget, TableState},
 };
 
-use crate::{app_action::AppAction, table::FilesTable, utils::{fetch_downloads_info, fetch_files}};
+use crate::{
+    app_action::AppAction, screens::ScreenHandler, table::FilesTable,
+    utils::{fetch_downloads_info, fetch_files},
+};
 
 #[derive(Clone)]
 pub struct FilesScreen {
@@ -30,9 +33,18 @@ impl FilesScreen {
         }
     }
 
-    pub async fn handle_keys(&mut self, key: KeyEvent) -> Option<AppAction> {
+    pub async fn refresh_downloads_info(&mut self) {
+        self.downloads_info = fetch_downloads_info().await;
+    }
+}
+
+impl ScreenHandler for FilesScreen {
+    async fn handle_keys(&mut self, key: KeyEvent) -> Option<AppAction> {
         match key.code {
-            KeyCode::Char('a') => Some(AppAction::OpenAppendFilesForm(self.package_id, self.package_name.clone())),
+            KeyCode::Char('a') => Some(AppAction::OpenAppendFilesForm(
+                self.package_id,
+                self.package_name.clone(),
+            )),
             KeyCode::Char('q') => Some(AppAction::Quit),
             KeyCode::Char('h') => Some(AppAction::GoToPackages),
             KeyCode::Char('j') => {
@@ -51,9 +63,6 @@ impl FilesScreen {
         }
     }
 
-    pub async fn refresh_downloads_info(&mut self) {
-        self.downloads_info = fetch_downloads_info().await;
-    }
 }
 
 impl Default for FilesScreen {
