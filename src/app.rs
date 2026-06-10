@@ -7,15 +7,26 @@ use crate::{
     append_files_form::AppendFilesForm,
     files_screen::FilesScreen,
     packages_screen::PackagesScreen,
-    screens::{Screen, Screens},
+    screens::Screen,
     utils::{
         fetch_file_data, fetch_files, fetch_package_data, fetch_packages,
         remove_files_from_package, remove_packages,
     },
 };
 
+macro_rules! find_screen {
+    ($self:expr, $variant:ident) => {
+        if let Screen::$variant(s) = &mut $self.current_screen {
+            Some(s)
+        } else if let Some(Screen::$variant(s)) = &mut $self.previous_screen {
+            Some(s)
+        } else {
+            None
+        }
+    };
+}
+
 pub struct App {
-    pub screens: Screens,
     pub current_screen: Screen,
     pub previous_screen: Option<Screen>,
     pub quit: bool,
@@ -25,32 +36,18 @@ impl App {
     pub async fn new() -> Self {
         let packages = PackagesScreen::new().await;
         Self {
-            screens: Screens {
-                packages: Some(packages),
-                files: None,
-                add_package_form: None,
-                append_files_form: None,
-            },
-            current_screen: Screen::Packages,
-            quit: false,
+            current_screen: Screen::Packages(packages),
             previous_screen: None,
+            quit: false,
         }
     }
 
     pub async fn handle_events(&mut self, event: Event) {
         match event {
             Event::Key(key) => self.handle_key(key).await,
-            Event::Paste(content) => match self.current_screen {
-                Screen::AddPackageForm => {
-                    if let Some(f) = self.screens.add_package_form.as_mut() {
-                        f.handle_paste(&content);
-                    }
-                }
-                Screen::AppendFilesForm => {
-                    if let Some(f) = self.screens.append_files_form.as_mut() {
-                        f.handle_paste(&content);
-                    }
-                }
+            Event::Paste(content) => match &mut self.current_screen {
+                Screen::AddPackageForm(f) => f.handle_paste(&content),
+                Screen::AppendFilesForm(f) => f.handle_paste(&content),
                 _ => {}
             },
             _ => {}
@@ -58,29 +55,19 @@ impl App {
     }
 
     pub async fn handle_key(&mut self, key: KeyEvent) {
-        let mut action = match self.current_screen {
-            Screen::Packages => {
-                let s = self.screens.packages.as_mut().unwrap();
-                s.handle_keys(key).await
-            }
-            Screen::Files => {
-                let s = self.screens.files.as_mut().unwrap();
-                s.handle_keys(key).await
-            }
-            Screen::AddPackageForm => {
-                let s = self.screens.add_package_form.as_mut().unwrap();
-                s.handle_keys(key).await
-            }
-            Screen::AppendFilesForm => {
-                let s = self.screens.append_files_form.as_mut().unwrap();
-                s.handle_keys(key).await
-            }
+        let mut action = match &mut self.current_screen {
+            Screen::Packages(s) => s.handle_keys(key).await,
+            Screen::Files(s) => s.handle_keys(key).await,
+            Screen::AddPackageForm(s) => s.handle_keys(key).await,
+            Screen::AppendFilesForm(s) => s.handle_keys(key).await,
         };
 
         if action.is_none() {
             action = match key.code {
-                KeyCode::Char('q') => (!matches!(self.current_screen, Screen::AddPackageForm))
-                    .then_some(AppAction::Quit),
+                KeyCode::Char('q') => {
+                    (!matches!(&self.current_screen, Screen::AddPackageForm(_)))
+                        .then_some(AppAction::Quit)
+                }
                 KeyCode::Char('A') => Some(AppAction::OpenAddPackageForm),
                 _ => None,
             };
@@ -118,38 +105,42 @@ impl App {
         match event.eventname.as_str() {
             "update" => match (event_type, event_id) {
                 (Some(0), Some(pid)) => {
-                    let Some(screen) = &mut self.screens.packages else {
+                    let Some(screen) = find_screen!(self, Packages) else {
                         return;
                     };
                     let Ok(package) = fetch_package_data(pid).await else {
                         return;
                     };
-                    let Some(position) = screen.packages.iter().position(|p| p.pid == pid) else {
+                    let Some(position) = screen.packages.iter().position(|p| p.pid == pid)
+                    else {
                         return;
                     };
 
-                    // re-fetch files if link count changed for a cached package
-                    if let Some(files_screen) = &mut self.screens.files
+                    let refetch = screen.packages[position].linkstotal.flatten()
+                        != package.linkstotal.flatten();
+                    screen.packages[position] = package;
+                    let _ = screen;
+
+                    if refetch
+                        && let Some(files_screen) = find_screen!(self, Files)
                         && files_screen.package_id == pid
-                        && screen.packages[position].linkstotal.flatten() != package.linkstotal.flatten()
                         && let Ok(files) = fetch_files(pid).await
                     {
                         files_screen.files = files;
                     }
-
-                    screen.packages[position] = package;
                 }
                 (Some(1), Some(fid)) => {
-                    let Ok(file) = fetch_file_data(fid).await else {
+                    let Some(files_screen) = find_screen!(self, Files) else {
                         return;
                     };
-                    let Some(files_screen) = &mut self.screens.files else {
+                    let Ok(file) = fetch_file_data(fid).await else {
                         return;
                     };
                     if files_screen.package_id != file.package_id {
                         return;
                     }
-                    let Some(position) = files_screen.files.iter().position(|f| f.fid == fid)
+                    let Some(position) =
+                        files_screen.files.iter().position(|f| f.fid == fid)
                     else {
                         return;
                     };
@@ -161,7 +152,7 @@ impl App {
             },
             "remove" => match (event_type, event_id) {
                 (Some(0), Some(pid)) => {
-                    let Some(screen) = &mut self.screens.packages else {
+                    let Some(screen) = find_screen!(self, Packages) else {
                         return;
                     };
                     let Some(pos) = screen.packages.iter().position(|p| p.pid == pid) else {
@@ -171,10 +162,11 @@ impl App {
                     screen.packages.remove(pos);
                 }
                 (Some(1), Some(fid)) => {
-                    let Some(files_screen) = &mut self.screens.files else {
+                    let Some(files_screen) = find_screen!(self, Files) else {
                         return;
                     };
-                    let Some(pos) = files_screen.files.iter().position(|f| f.fid == fid) else {
+                    let Some(pos) = files_screen.files.iter().position(|f| f.fid == fid)
+                    else {
                         return;
                     };
 
@@ -184,21 +176,22 @@ impl App {
             },
             "insert" => match (event_type, event_id) {
                 (Some(0), Some(pid)) => {
-                    let Some(screen) = &mut self.screens.packages else {
+                    let Some(screen) = find_screen!(self, Packages) else {
                         return;
                     };
                     let Ok(package) = fetch_package_data(pid).await else {
                         return;
                     };
-                    let position = screen.packages.partition_point(|p| p.order < package.order);
+                    let position =
+                        screen.packages.partition_point(|p| p.order < package.order);
 
                     screen.packages.insert(position, package);
                 }
                 (Some(1), Some(fid)) => {
-                    let Ok(file) = fetch_file_data(fid).await else {
+                    let Some(files_screen) = find_screen!(self, Files) else {
                         return;
                     };
-                    let Some(files_screen) = &mut self.screens.files else {
+                    let Ok(file) = fetch_file_data(fid).await else {
                         return;
                     };
                     if files_screen.package_id != file.package_id {
@@ -213,7 +206,7 @@ impl App {
                 _ => {}
             },
             "reload" => {
-                if let Some(screen) = &mut self.screens.packages
+                if let Some(screen) = find_screen!(self, Packages)
                     && let Ok(packages) = fetch_packages().await
                 {
                     screen.packages = packages;
@@ -228,79 +221,101 @@ impl App {
         if self
             .previous_screen
             .as_ref()
-            .is_none_or(|s| &self.current_screen == s)
+            .is_none_or(|prev| {
+                std::mem::discriminant(&self.current_screen)
+                    == std::mem::discriminant(prev)
+            })
         {
             return;
         }
 
         let prev = self.previous_screen.take().unwrap();
-        self.previous_screen = Some(self.current_screen);
-        self.current_screen = prev;
+        let old = std::mem::replace(&mut self.current_screen, prev);
+        self.previous_screen = Some(old);
     }
 
     fn go_to_add_package_form(&mut self) {
-        if matches!(self.current_screen, Screen::AddPackageForm) {
+        if matches!(&self.current_screen, Screen::AddPackageForm(_)) {
             return;
         }
 
-        if self.screens.add_package_form.is_none() {
-            self.screens.add_package_form = Some(AddPackageForm::default());
+        if let Some(Screen::AddPackageForm(_)) = &self.previous_screen {
+            let prev = self.previous_screen.take().unwrap();
+            let old = std::mem::replace(&mut self.current_screen, prev);
+            self.previous_screen = Some(old);
+            return;
         }
 
-        self.previous_screen = Some(self.current_screen);
-        self.current_screen = Screen::AddPackageForm;
+        let old = std::mem::replace(
+            &mut self.current_screen,
+            Screen::AddPackageForm(AddPackageForm::default()),
+        );
+        self.previous_screen = Some(old);
     }
 
     fn go_to_packages(&mut self) {
-        if matches!(self.current_screen, Screen::Packages) {
+        if matches!(&self.current_screen, Screen::Packages(_)) {
             return;
         }
 
-        if self.screens.packages.is_none() {
-            self.screens.packages = Some(PackagesScreen::default());
+        if let Some(Screen::Packages(_)) = &self.previous_screen {
+            let prev = self.previous_screen.take().unwrap();
+            let old = std::mem::replace(&mut self.current_screen, prev);
+            self.previous_screen = Some(old);
+            return;
         }
 
-        self.previous_screen = Some(self.current_screen);
-        self.current_screen = Screen::Packages;
+        let old = std::mem::replace(
+            &mut self.current_screen,
+            Screen::Packages(PackagesScreen::default()),
+        );
+        self.previous_screen = Some(old);
     }
 
     async fn go_to_files(&mut self, pid: i32, name: String) {
-        if matches!(self.current_screen, Screen::Files) {
-            return;
+        if let Screen::Files(s) = &self.current_screen {
+            if s.package_id == pid {
+                return;
+            }
         }
 
-        if self
-            .screens
-            .files
-            .as_ref()
-            .is_none_or(|s| s.package_id != pid)
-        {
-            self.screens.files = Some(FilesScreen::new(pid, name).await);
+        if let Some(Screen::Files(s)) = &self.previous_screen {
+            if s.package_id == pid {
+                let prev = self.previous_screen.take().unwrap();
+                let old = std::mem::replace(&mut self.current_screen, prev);
+                self.previous_screen = Some(old);
+                return;
+            }
         }
 
-        self.previous_screen = Some(self.current_screen);
-        self.current_screen = Screen::Files;
+        let old = std::mem::replace(
+            &mut self.current_screen,
+            Screen::Files(FilesScreen::new(pid, name).await),
+        );
+        self.previous_screen = Some(old);
     }
 
     fn go_to_append_files_form(&mut self, pid: i32, name: String) {
-        if matches!(self.current_screen, Screen::AppendFilesForm) {
+        if matches!(&self.current_screen, Screen::AppendFilesForm(_)) {
             return;
         }
 
-        self.screens.append_files_form = Some(AppendFilesForm::new(pid, name));
-        self.previous_screen = Some(self.current_screen);
-        self.current_screen = Screen::AppendFilesForm;
+        let old = std::mem::replace(
+            &mut self.current_screen,
+            Screen::AppendFilesForm(AppendFilesForm::new(pid, name)),
+        );
+        self.previous_screen = Some(old);
     }
 
     pub fn get_bindings(&self) -> Vec<(&'static str, &'static str)> {
-        match self.current_screen {
-            Screen::AddPackageForm => vec![
+        match &self.current_screen {
+            Screen::AddPackageForm(_) => vec![
                 ("Esc", "back"),
                 ("Tab", "next"),
                 ("Shift+Tab", "prev"),
                 ("Enter", "newline/toggle/submit"),
             ],
-            Screen::AppendFilesForm => vec![
+            Screen::AppendFilesForm(_) => vec![
                 ("Esc", "back"),
                 ("Tab", "next"),
                 ("Shift+Tab", "prev"),
@@ -316,7 +331,7 @@ impl App {
                     ("a", "add links"),
                     ("d", "delete"),
                 ];
-                if matches!(self.current_screen, Screen::Files) {
+                if matches!(&self.current_screen, Screen::Files(_)) {
                     binds.insert(0, ("h", "go back"));
                 }
                 binds
@@ -329,13 +344,7 @@ impl Default for App {
     fn default() -> Self {
         let packages = PackagesScreen::default();
         Self {
-            screens: Screens {
-                packages: Some(packages),
-                files: None,
-                add_package_form: None,
-                append_files_form: None,
-            },
-            current_screen: Screen::Packages,
+            current_screen: Screen::Packages(packages),
             previous_screen: None,
             quit: false,
         }

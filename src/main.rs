@@ -46,20 +46,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let areas = layout.split(frame.area());
 
             match &mut app.current_screen {
-                Screen::Packages => {
-                    let s = app.screens.packages.as_mut().unwrap();
+                Screen::Packages(s) => {
                     frame.render_stateful_widget(s.clone(), areas[0], &mut s.table_state);
                 }
-                Screen::Files => {
-                    let s = app.screens.files.as_mut().unwrap();
+                Screen::Files(s) => {
                     frame.render_stateful_widget(s.clone(), areas[0], &mut s.table_state);
                 }
-                Screen::AddPackageForm => {
-                    let s = app.screens.add_package_form.as_mut().unwrap();
+                Screen::AddPackageForm(s) => {
                     frame.render_widget(s.clone(), areas[0]);
                 }
-                Screen::AppendFilesForm => {
-                    let s = app.screens.append_files_form.as_mut().unwrap();
+                Screen::AppendFilesForm(s) => {
                     frame.render_widget(s.clone(), areas[0]);
                 }
             }
