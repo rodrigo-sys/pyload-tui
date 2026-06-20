@@ -1,0 +1,32 @@
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  tag_job:
+    runs-on: ubuntu-latest
+    name: Tag
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install cargo-edit
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-edit
+
+      - name: Auto-tag version
+        uses: cocogitto/cocogitto-action@v4
+        id: tag
+        with:
+          command: bump
+          args: --auto
+          git-user: 'Cog Bot'
+          git-user-email: 'cog@bot.ai'
+
+      - name: Print tag
+        run: "echo 'tagged: ${{ steps.tag.outputs.version }}'"
