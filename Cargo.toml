@@ -13,3 +13,4 @@ serde_json = "1"
 dirs = "6.0.0"
 kdl = "6.5.0"
 enum_dispatch = "0.3"
+openapi = { git = "https://github.com/rodrigo-sys/pyload-rust-sdk" }
