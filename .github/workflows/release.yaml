@@ -6,7 +6,30 @@ permissions:
   contents: write
 
 jobs:
+  check-release-exists:
+    runs-on: ubuntu-latest
+    outputs:
+      release_exists: ${{ steps.check_release.outputs.release_exists }}
+      tag: ${{ steps.check_release.outputs.tag }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: check_release
+        run: |
+          TAG="$(git describe --tags --abbrev=0)"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          if gh release view "$TAG" &>/dev/null; then
+            echo "release_exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "release_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
   release:
+    needs: check-release-exists
+    if: needs.check-release-exists.outputs.release_exists == 'false'
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ github.token }}
@@ -15,17 +38,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Check if latest tag already has a release
-        run: |
-          TAG="$(git describe --tags --abbrev=0)"
-          echo "TAG=$TAG" >> "$GITHUB_ENV"
-          [ "$TAG" = "$(gh release list --limit 1 --json tagName --jq '.[0].tagName')" ] && exit 1
       - name: Build
-        run: |
-          cargo build --release
+        run: cargo build --release
       - name: Create release
         run: |
-          gh release create "$TAG" "$BINARY_PATH" --title "$TAG"
+          gh release create "${{ needs.check-release-exists.outputs.tag }}" "$BINARY_PATH" --title "${{ needs.check-release-exists.outputs.tag }}"
       - name: Remove previous releases
         run: |
           gh release list --limit 1000 --json tagName --jq '.[1:].[].tagName' |
