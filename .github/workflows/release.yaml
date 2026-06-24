@@ -1,0 +1,32 @@
+name: Release
+
+on: workflow_dispatch
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BINARY_PATH: 'target/release/pyload-tui'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check if latest tag already has a release
+        run: |
+          TAG="$(git describe --tags --abbrev=0)"
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+          [ "$TAG" = "$(gh release list --limit 1 --json tagName --jq '.[0].tagName')" ] && exit 1
+      - name: Build
+        run: |
+          cargo build --release
+      - name: Create release
+        run: |
+          gh release create "$TAG" "$BINARY_PATH" --title "$TAG"
+      - name: Remove previous releases
+        run: |
+          gh release list --limit 1000 --json tagName --jq '.[1:].[].tagName' |
+          xargs -r -I{} gh release delete '{}' --yes
