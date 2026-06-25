@@ -2,8 +2,6 @@
 
 [features](#features) • [installation](#installation) • [prerequisites](#prerequisites) • [usage](#usage) • [bindings](#bindings) • [build](#build-from-source)
 
----
-
 Terminal UI client for pyLoad.
 
 ## Features
