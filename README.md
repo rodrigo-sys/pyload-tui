@@ -1,6 +1,6 @@
 # pyload-tui
 
-[features](#features) • [installation](#installation) • [prerequisites](#prerequisites) • [usage](#usage) • [bindings](#bindings) • [build from source](#build-from-source)
+[features](#features) • [installation](#installation) • [prerequisites](#prerequisites) • [usage](#usage) • [bindings](#bindings) • [build](#build-from-source)
 
 ---
 
