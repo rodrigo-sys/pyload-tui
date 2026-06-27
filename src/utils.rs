@@ -8,15 +8,18 @@ use kdl::KdlDocument;
 use openapi::apis::Error;
 use openapi::apis::configuration::{ApiKey, Configuration};
 use openapi::apis::py_load_rest_api::{
-    self, ApiAddFilesPostError, ApiAddPackagePostError, api_add_files_post, api_add_package_post,
-    api_set_package_data_post, api_delete_files_post, api_delete_packages_post,
-    api_get_file_data_get, api_get_package_data_get, api_status_downloads_get,
-    ApiDeleteFilesPostError, ApiDeletePackagesPostError,
-    ApiGetFileDataGetError, ApiGetPackageDataGetError,
+    self, ApiAddFilesPostError, ApiAddPackagePostError, ApiDeleteFilesPostError,
+    ApiDeletePackagesPostError, ApiGetFileDataGetError, ApiGetPackageDataGetError,
+    ApiRestartFilePostError, ApiStopDownloadsPostError, api_add_files_post, api_add_package_post,
+    api_delete_files_post, api_delete_packages_post, api_get_file_data_get,
+    api_get_package_data_get, api_order_file_post, api_restart_file_post,
+    api_set_package_data_post, api_status_downloads_get, api_stop_all_downloads_post,
+    api_stop_downloads_post,
 };
 use openapi::models::{
-    ApiAddFilesPostRequest, ApiAddPackagePostRequest, ApiSetPackageDataPostRequest, Destination,
-    ApiDeleteFilesPostRequest, ApiDeletePackagesPostRequest, DownloadInfo, FileData, PackageData,
+    ApiAddFilesPostRequest, ApiAddPackagePostRequest, ApiDeleteFilesPostRequest,
+    ApiDeletePackagesPostRequest, ApiSetPackageDataPostRequest, ApiStopDownloadsPostRequest,
+    Destination, DownloadInfo, FileData, PackageData,
 };
 
 pub fn get_config_path() -> PathBuf {
@@ -106,14 +109,14 @@ pub async fn fetch_package_data(
     api_get_package_data_get(get_pyload_config(), Some(package_id)).await
 }
 
-pub async fn fetch_file_data(
-    file_id: i32,
-) -> Result<FileData, Error<ApiGetFileDataGetError>> {
+pub async fn fetch_file_data(file_id: i32) -> Result<FileData, Error<ApiGetFileDataGetError>> {
     api_get_file_data_get(get_pyload_config(), Some(file_id)).await
 }
 
 pub async fn fetch_files(package_id: i32) -> Result<Vec<openapi::models::FileData>, String> {
-    let pkg = fetch_package_data(package_id).await.map_err(|e| e.to_string())?;
+    let pkg = fetch_package_data(package_id)
+        .await
+        .map_err(|e| e.to_string())?;
 
     pkg.links
         .flatten()
@@ -149,16 +152,30 @@ pub async fn add_links_to_package(
     api_add_files_post(get_pyload_config(), Some(req)).await
 }
 
-pub async fn remove_packages(package_ids: Vec<i32>) -> Result<(), Error<ApiDeletePackagesPostError>>{
+pub async fn remove_packages(
+    package_ids: Vec<i32>,
+) -> Result<(), Error<ApiDeletePackagesPostError>> {
     let req = ApiDeletePackagesPostRequest::new(package_ids);
     api_delete_packages_post(get_pyload_config(), Some(req)).await
 }
 
-pub async fn remove_files_from_package(file_ids: Vec<i32>) -> Result<(), Error<ApiDeleteFilesPostError>>{
+pub async fn remove_files_from_package(
+    file_ids: Vec<i32>,
+) -> Result<(), Error<ApiDeleteFilesPostError>> {
     let req = ApiDeleteFilesPostRequest::new(file_ids);
     api_delete_files_post(get_pyload_config(), Some(req)).await
 }
 
 pub async fn fetch_downloads_info() -> Vec<DownloadInfo> {
-    api_status_downloads_get(get_pyload_config()).await.unwrap_or_default()
+    api_status_downloads_get(get_pyload_config())
+        .await
+        .unwrap_or_default()
+}
+
+pub async fn stop_downloads(file_ids: Vec<i32>) -> Result<(), Error<ApiStopDownloadsPostError>> {
+    let stop_downloads_request = ApiStopDownloadsPostRequest::new(file_ids);
+    api_stop_downloads_post(get_pyload_config(), Some(stop_downloads_request)).await
+}
+pub async fn restart_file(file_id: i32) -> Result<(), Error<ApiRestartFilePostError>> {
+    api_restart_file_post(get_pyload_config(), Some(file_id)).await
 }

@@ -7,8 +7,7 @@ use ratatui::{
 };
 
 use crate::{
-    app_action::AppAction, screens::ScreenHandler, table::FilesTable,
-    utils::{fetch_downloads_info, fetch_files},
+    app_action::AppAction, screens::ScreenHandler, table::FilesTable, utils::{fetch_downloads_info, fetch_files, },
 };
 
 #[derive(Clone)]
@@ -47,6 +46,14 @@ impl ScreenHandler for FilesScreen {
             )),
             KeyCode::Char('q') => Some(AppAction::Quit),
             KeyCode::Char('h') => Some(AppAction::GoToPackages),
+            KeyCode::Char('s') => {
+                let file = self.table_state.selected()?;
+                Some(AppAction::StopDownloads(vec![self.files[file].fid]))
+            },
+            KeyCode::Char('r') => {
+                let file = self.table_state.selected()?;
+                Some(AppAction::RestartFile(self.files[file].fid))
+            },
             KeyCode::Char('j') => {
                 self.table_state.select_next();
                 None

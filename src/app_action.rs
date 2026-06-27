@@ -7,4 +7,6 @@ pub enum AppAction {
     OpenAppendFilesForm(i32, String),
     DeletePackages(Vec<i32>),
     DeleteFiles(Vec<i32>),
+    StopDownloads(Vec<i32>),
+    RestartFile(i32),
 }

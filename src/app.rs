@@ -2,15 +2,8 @@ use crossterm::event::{Event, KeyCode, KeyEvent};
 use openapi::models::EventInfo;
 
 use crate::{
-    add_package_form::AddPackageForm,
-    app_action::AppAction,
-    append_files_form::AppendFilesForm,
-    files_screen::FilesScreen,
-    packages_screen::PackagesScreen,
-    screens::{Screen, ScreenHandler},
-    utils::{
-        fetch_file_data, fetch_files, fetch_package_data, fetch_packages,
-        remove_files_from_package, remove_packages,
+    add_package_form::AddPackageForm, app_action::AppAction, append_files_form::AppendFilesForm, files_screen::FilesScreen, packages_screen::PackagesScreen, screens::{Screen, ScreenHandler}, utils::{
+        fetch_file_data, fetch_files, fetch_package_data, fetch_packages, remove_files_from_package, remove_packages, restart_file, stop_downloads,
     },
 };
 
@@ -84,6 +77,12 @@ impl App {
             }
             Some(AppAction::GoToPreviousScreen) => {
                 self.go_to_previous_screen();
+            }
+            Some(AppAction::StopDownloads(files)) => {
+                let _ = stop_downloads(files).await;
+            }
+            Some(AppAction::RestartFile(file)) => {
+                let _ = restart_file(file).await;
             }
             _ => {}
         }
