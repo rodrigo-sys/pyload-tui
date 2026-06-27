@@ -22,30 +22,36 @@ impl From<Vec<PackageData>> for PackagesTable {
                     _ => "0 B / 0 B".to_string(),
                 };
                 Row::new(vec![
-                    Cell::from(p.pid.to_string()),
+                    Cell::from(p.order.to_string()),
                     Cell::from(p.name),
                     Cell::from(links),
                     Cell::from(size),
                     Cell::from(p.folder),
+                    Cell::from(match p.dest {
+                        0 => "COLLECTOR",
+                        _ => "QUEUE",
+                    }),
                 ])
             })
             .collect();
 
         let header = Row::new(vec![
-            Cell::from("PID"),
+            Cell::from("#"),
             Cell::from("Name"),
             Cell::from("Links"),
             Cell::from("Size"),
             Cell::from("Folder"),
+            Cell::from("Dest"),
         ])
         .style(ratatui::style::Style::default().add_modifier(ratatui::style::Modifier::BOLD));
 
         let widths = [
             Constraint::Length(5),
-            Constraint::Min(20),
+            Constraint::Length(40),
             Constraint::Length(10),
             Constraint::Length(15),
-            Constraint::Min(15),
+            Constraint::Length(30),
+            Constraint::Length(10),
         ];
 
         let table = Table::new(rows, widths).header(header).row_highlight_style(HIGHLIGHT_STYLE);
