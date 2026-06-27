@@ -10,3 +10,7 @@ pre_bump_hooks = [
   "cargo set-version {{version}}",  # bump version in Cargo.toml
   "git add :/Cargo.lock",           # stage version bump in Cargo.lock
 ]
+post_bump_hooks = [
+  "git push origin",
+  "git push origin {{version}}",
+]
