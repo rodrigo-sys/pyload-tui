@@ -7,7 +7,10 @@ use ratatui::{
 };
 
 use crate::{
-    app_action::AppAction, screens::ScreenHandler, table::PackagesTable, utils::fetch_packages,
+    app_action::AppAction,
+    screens::ScreenHandler,
+    table::PackagesTable,
+    utils::fetch_packages,
 };
 
 #[derive(Clone)]
@@ -39,6 +42,27 @@ impl ScreenHandler for PackagesScreen {
                 let index = self.table_state.selected()?;
                 Some(AppAction::DeletePackages(vec![self.packages[index].pid]))
             }
+            KeyCode::Char('J') => {
+                let index = self.table_state.selected()?;
+                let pkg = &self.packages[index];
+
+                let max_order = self.packages.iter().filter(|p| p.dest == pkg.dest).map(|p| p.order).max().unwrap_or(0);
+
+                if pkg.order < max_order {
+                    Some(AppAction::ReorderPackage(pkg.pid, pkg.order + 1))
+                } else {
+                    None
+                }
+            }
+            KeyCode::Char('K') => {
+                let index = self.table_state.selected()?;
+                let pkg = &self.packages[index];
+                if pkg.order > 0 {
+                    Some(AppAction::ReorderPackage(pkg.pid, pkg.order - 1))
+                } else {
+                    None
+                }
+            }
             KeyCode::Char('l') => {
                 let index = self.table_state.selected().unwrap();
                 let pkg = &self.packages[index];
@@ -55,7 +79,6 @@ impl ScreenHandler for PackagesScreen {
             _ => None,
         }
     }
-
 }
 
 impl Default for PackagesScreen {
@@ -71,12 +94,6 @@ impl StatefulWidget for PackagesScreen {
     type State = TableState;
 
     fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
-        StatefulWidget::render(
-            PackagesTable::from(self.packages.clone()).0,
-            area,
-            buf,
-            state,
-        );
+        StatefulWidget::render(PackagesTable::from(self.packages.clone()).0, area, buf, state);
     }
 }
-

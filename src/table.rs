@@ -44,6 +44,7 @@ impl From<Vec<PackageData>> for PackagesTable {
             Cell::from("Dest"),
         ])
         .style(ratatui::style::Style::default().add_modifier(ratatui::style::Modifier::BOLD));
+        // .style(ratatui::style::Style::default().bg(Color::Yellow).fg(Color::Black).add_modifier(ratatui::style::Modifier::BOLD));
 
         let widths = [
             Constraint::Length(5),
