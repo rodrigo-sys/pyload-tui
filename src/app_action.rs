@@ -1,3 +1,5 @@
+use openapi::models::Destination;
+
 pub enum AppAction {
     Quit,
     GoToPackages,
@@ -10,4 +12,5 @@ pub enum AppAction {
     StopDownloads(Vec<i32>),
     RestartFile(i32),
     ReorderPackage(i32, i32),
+    MovePackage(Destination, i32),
 }

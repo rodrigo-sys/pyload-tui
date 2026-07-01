@@ -1,17 +1,15 @@
 use crossterm::event::{KeyCode, KeyEvent};
-use openapi::{apis::py_load_rest_api::api_get_events_get, models::PackageData};
+use openapi::{
+    apis::py_load_rest_api::api_get_events_get,
+    models::{Destination, PackageData},
+};
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
     widgets::{StatefulWidget, TableState},
 };
 
-use crate::{
-    app_action::AppAction,
-    screens::ScreenHandler,
-    table::PackagesTable,
-    utils::fetch_packages,
-};
+use crate::{app_action::AppAction, screens::ScreenHandler, table::PackagesTable, utils::fetch_packages};
 
 #[derive(Clone)]
 pub struct PackagesScreen {
@@ -41,6 +39,18 @@ impl ScreenHandler for PackagesScreen {
             KeyCode::Char('d') => {
                 let index = self.table_state.selected()?;
                 Some(AppAction::DeletePackages(vec![self.packages[index].pid]))
+            }
+            KeyCode::Char('m') => {
+                let index = self.table_state.selected()?;
+                let pkg = &self.packages[index];
+
+                Some(AppAction::MovePackage(
+                    match pkg.dest {
+                        0 => Destination::QUEUE,
+                        _ => Destination::COLLECTOR,
+                    },
+                    pkg.pid,
+                ))
             }
             KeyCode::Char('J') => {
                 let index = self.table_state.selected()?;

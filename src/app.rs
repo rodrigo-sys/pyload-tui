@@ -2,15 +2,8 @@ use crossterm::event::{Event, KeyCode, KeyEvent};
 use openapi::models::EventInfo;
 
 use crate::{
-    add_package_form::AddPackageForm,
-    app_action::AppAction,
-    append_files_form::AppendFilesForm,
-    files_screen::FilesScreen,
-    packages_screen::PackagesScreen,
-    screens::{Screen, ScreenHandler},
-    utils::{
-        fetch_file_data, fetch_files, fetch_package_data, fetch_packages, remove_files_from_package, remove_packages,
-        reorder_package, restart_file, stop_downloads,
+    add_package_form::AddPackageForm, app_action::AppAction, append_files_form::AppendFilesForm, files_screen::FilesScreen, packages_screen::PackagesScreen, screens::{Screen, ScreenHandler}, utils::{
+        fetch_file_data, fetch_files, fetch_package_data, fetch_packages, move_package, remove_files_from_package, remove_packages, reorder_package, restart_file, stop_downloads,
     },
 };
 
@@ -90,6 +83,9 @@ impl App {
             }
             Some(AppAction::ReorderPackage(pid, position)) => {
                 let _ = reorder_package(pid, position).await;
+            }
+            Some(AppAction::MovePackage(destination, pid)) => {
+                let _ = move_package(destination, pid).await;
             }
             _ => {}
         }

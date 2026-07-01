@@ -8,12 +8,7 @@ use kdl::KdlDocument;
 use openapi::apis::Error;
 use openapi::apis::configuration::{ApiKey, Configuration};
 use openapi::apis::py_load_rest_api::{
-    self, ApiAddFilesPostError, ApiAddPackagePostError, ApiDeleteFilesPostError, ApiDeletePackagesPostError,
-    ApiGetFileDataGetError, ApiGetPackageDataGetError, ApiRestartFilePostError, ApiStopDownloadsPostError,
-    api_add_files_post, api_add_package_post, api_delete_files_post, api_delete_packages_post, api_get_file_data_get,
-    api_get_package_data_get, api_get_package_order_get, api_order_file_post, api_order_package_post,
-    api_restart_file_post, api_set_package_data_post, api_status_downloads_get, api_stop_all_downloads_post,
-    api_stop_downloads_post,
+    self, ApiAddFilesPostError, ApiAddPackagePostError, ApiDeleteFilesPostError, ApiDeletePackagesPostError, ApiGetFileDataGetError, ApiGetPackageDataGetError, ApiMovePackagePostError, ApiRestartFilePostError, ApiStopDownloadsPostError, api_add_files_post, api_add_package_post, api_delete_files_post, api_delete_packages_post, api_get_file_data_get, api_get_package_data_get, api_get_package_order_get, api_move_files_post, api_move_package_post, api_order_file_post, api_order_package_post, api_restart_file_post, api_set_package_data_post, api_status_downloads_get, api_stop_all_downloads_post, api_stop_downloads_post,
 };
 use openapi::models::{
     ApiAddFilesPostRequest, ApiAddPackagePostRequest, ApiDeleteFilesPostRequest, ApiDeletePackagesPostRequest,
@@ -161,4 +156,11 @@ pub async fn reorder_package(
     position: i32,
 ) -> Result<(), Error<py_load_rest_api::ApiOrderPackagePostError>> {
     api_order_package_post(get_pyload_config(), package_id, position.max(0)).await
+}
+
+pub async fn move_package(
+    destination: Destination,
+    package_id: i32,
+) -> Result<(), Error<ApiMovePackagePostError>> {
+    api_move_package_post(get_pyload_config(), destination, package_id).await
 }
