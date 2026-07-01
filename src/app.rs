@@ -3,7 +3,7 @@ use openapi::models::EventInfo;
 
 use crate::{
     add_package_form::AddPackageForm, app_action::AppAction, append_files_form::AppendFilesForm, files_screen::FilesScreen, packages_screen::PackagesScreen, screens::{Screen, ScreenHandler}, utils::{
-        fetch_file_data, fetch_files, fetch_package_data, fetch_packages, move_package, remove_files_from_package, remove_packages, reorder_package, restart_file, restart_package, stop_downloads,
+        fetch_file_data, fetch_files, fetch_package_data, fetch_packages, move_package, remove_files_from_package, remove_packages, reorder_package, restart_failed, restart_file, restart_package, stop_downloads,
     },
 };
 
@@ -52,6 +52,7 @@ impl App {
                     (!matches!(&self.current_screen, Screen::AddPackageForm(_))).then_some(AppAction::Quit)
                 }
                 KeyCode::Char('A') => Some(AppAction::OpenAddPackageForm),
+                KeyCode::Char('R') => Some(AppAction::RestartFailed),
                 _ => None,
             };
         }
@@ -83,6 +84,9 @@ impl App {
             }
             Some(AppAction::RestartPackage(pid)) => {
                 let _ = restart_package(pid).await;
+            }
+            Some(AppAction::RestartFailed) => {
+                let _ = restart_failed().await;
             }
             Some(AppAction::ReorderPackage(pid, position)) => {
                 let _ = reorder_package(pid, position).await;

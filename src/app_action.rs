@@ -12,6 +12,7 @@ pub enum AppAction {
     StopDownloads(Vec<i32>),
     RestartFile(i32),
     RestartPackage(i32),
+    RestartFailed,
     ReorderPackage(i32, i32),
     MovePackage(Destination, i32),
 }
