@@ -78,6 +78,10 @@ impl ScreenHandler for PackagesScreen {
                 let pkg = &self.packages[index];
                 Some(AppAction::GoToFiles(pkg.pid, pkg.name.clone()))
             }
+            KeyCode::Char('r') => {
+                let index = self.table_state.selected()?;
+                Some(AppAction::RestartPackage(self.packages[index].pid))
+            }
             KeyCode::Char('j') => {
                 self.table_state.select_next();
                 None

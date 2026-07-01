@@ -8,7 +8,7 @@ use kdl::KdlDocument;
 use openapi::apis::Error;
 use openapi::apis::configuration::{ApiKey, Configuration};
 use openapi::apis::py_load_rest_api::{
-    self, ApiAddFilesPostError, ApiAddPackagePostError, ApiDeleteFilesPostError, ApiDeletePackagesPostError, ApiGetFileDataGetError, ApiGetPackageDataGetError, ApiMovePackagePostError, ApiRestartFilePostError, ApiStopDownloadsPostError, api_add_files_post, api_add_package_post, api_delete_files_post, api_delete_packages_post, api_get_file_data_get, api_get_package_data_get, api_get_package_order_get, api_move_files_post, api_move_package_post, api_order_file_post, api_order_package_post, api_restart_file_post, api_set_package_data_post, api_status_downloads_get, api_stop_all_downloads_post, api_stop_downloads_post,
+    self, ApiAddFilesPostError, ApiAddPackagePostError, ApiDeleteFilesPostError, ApiDeletePackagesPostError, ApiGetFileDataGetError, ApiGetPackageDataGetError, ApiMovePackagePostError, ApiRestartFilePostError, ApiRestartPackagePostError, ApiStopDownloadsPostError, api_add_files_post, api_add_package_post, api_delete_files_post, api_delete_packages_post, api_get_file_data_get, api_get_package_data_get, api_get_package_order_get, api_move_files_post, api_move_package_post, api_order_file_post, api_order_package_post,     api_restart_file_post, api_restart_package_post, api_set_package_data_post, api_status_downloads_get, api_stop_all_downloads_post, api_stop_downloads_post,
 };
 use openapi::models::{
     ApiAddFilesPostRequest, ApiAddPackagePostRequest, ApiDeleteFilesPostRequest, ApiDeletePackagesPostRequest,
@@ -149,6 +149,10 @@ pub async fn stop_downloads(file_ids: Vec<i32>) -> Result<(), Error<ApiStopDownl
 }
 pub async fn restart_file(file_id: i32) -> Result<(), Error<ApiRestartFilePostError>> {
     api_restart_file_post(get_pyload_config(), Some(file_id)).await
+}
+
+pub async fn restart_package(package_id: i32) -> Result<(), Error<ApiRestartPackagePostError>> {
+    api_restart_package_post(get_pyload_config(), package_id).await
 }
 
 pub async fn reorder_package(
