@@ -3,7 +3,7 @@ use openapi::models::EventInfo;
 
 use crate::{
     add_package_form::AddPackageForm, app_action::AppAction, append_files_form::AppendFilesForm, files_screen::FilesScreen, packages_screen::PackagesScreen, screens::{Screen, ScreenHandler}, utils::{
-        fetch_file_data, fetch_files, fetch_package_data, fetch_packages, move_package, pause_server, remove_files_from_package, remove_packages, reorder_package, restart_failed, restart_file, restart_package, stop_all_downloads, stop_downloads, toggle_pause, unpause_server,
+        fetch_file_data, fetch_files, fetch_package_data, fetch_packages, fetch_server_status, move_package, pause_server, remove_files_from_package, remove_packages, reorder_package, restart_failed, restart_file, restart_package, stop_all_downloads, stop_downloads, toggle_pause, unpause_server,
     },
 };
 
@@ -97,8 +97,15 @@ impl App {
                 let _ = stop_all_downloads().await;
             }
             Some(AppAction::AbortAndPause) => {
-                let _ = stop_all_downloads().await;
-                let _ = pause_server().await;
+                if let Ok(status) = fetch_server_status().await {
+                    if status.pause {
+                        let _ = restart_failed().await;
+                        let _ = unpause_server().await;
+                    } else {
+                        let _ = stop_all_downloads().await;
+                        let _ = pause_server().await;
+                    }
+                }
             }
             Some(AppAction::PauseServer) => {
                 let _ = pause_server().await;
