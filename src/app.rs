@@ -3,7 +3,7 @@ use openapi::models::EventInfo;
 
 use crate::{
     add_package_form::AddPackageForm, app_action::AppAction, append_files_form::AppendFilesForm, files_screen::FilesScreen, packages_screen::PackagesScreen, screens::{Screen, ScreenHandler}, utils::{
-        fetch_file_data, fetch_files, fetch_package_data, fetch_packages, move_package, remove_files_from_package, remove_packages, reorder_package, restart_failed, restart_file, restart_package, stop_all_downloads, stop_downloads,
+        fetch_file_data, fetch_files, fetch_package_data, fetch_packages, move_package, pause_server, remove_files_from_package, remove_packages, reorder_package, restart_failed, restart_file, restart_package, stop_all_downloads, stop_downloads, toggle_pause, unpause_server,
     },
 };
 
@@ -54,6 +54,9 @@ impl App {
                 KeyCode::Char('A') => Some(AppAction::OpenAddPackageForm),
                 KeyCode::Char('R') => Some(AppAction::RestartFailed),
                 KeyCode::Char('S') => Some(AppAction::AbortActive),
+                KeyCode::Char('P') => Some(AppAction::PauseServer),
+                KeyCode::Char('U') => Some(AppAction::UnpauseServer),
+                KeyCode::Char('T') => Some(AppAction::TogglePause),
                 _ => None,
             };
         }
@@ -91,6 +94,15 @@ impl App {
             }
             Some(AppAction::AbortActive) => {
                 let _ = stop_all_downloads().await;
+            }
+            Some(AppAction::PauseServer) => {
+                let _ = pause_server().await;
+            }
+            Some(AppAction::UnpauseServer) => {
+                let _ = unpause_server().await;
+            }
+            Some(AppAction::TogglePause) => {
+                let _ = toggle_pause().await;
             }
             Some(AppAction::ReorderPackage(pid, position)) => {
                 let _ = reorder_package(pid, position).await;

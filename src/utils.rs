@@ -8,7 +8,7 @@ use kdl::KdlDocument;
 use openapi::apis::Error;
 use openapi::apis::configuration::{ApiKey, Configuration};
 use openapi::apis::py_load_rest_api::{
-    self, ApiAddFilesPostError, ApiAddPackagePostError, ApiDeleteFilesPostError, ApiDeletePackagesPostError, ApiGetFileDataGetError, ApiGetPackageDataGetError, ApiMovePackagePostError, ApiRestartFailedPostError, ApiRestartFilePostError, ApiRestartPackagePostError, ApiStopAllDownloadsPostError, ApiStopDownloadsPostError, api_add_files_post, api_add_package_post, api_delete_files_post, api_delete_packages_post, api_get_file_data_get, api_get_package_data_get, api_get_package_order_get, api_move_files_post, api_move_package_post, api_order_file_post, api_order_package_post,     api_restart_file_post, api_restart_package_post, api_restart_failed_post, api_set_package_data_post, api_status_downloads_get, api_stop_all_downloads_post, api_stop_downloads_post,
+    self, ApiAddFilesPostError, ApiAddPackagePostError, ApiDeleteFilesPostError, ApiDeletePackagesPostError, ApiGetFileDataGetError, ApiGetPackageDataGetError, ApiMovePackagePostError, ApiPauseServerPostError, ApiRestartFailedPostError, ApiRestartFilePostError, ApiRestartPackagePostError, ApiStopAllDownloadsPostError, ApiStopDownloadsPostError, ApiTogglePausePostError, ApiUnpauseServerPostError, api_add_files_post, api_add_package_post, api_delete_files_post, api_delete_packages_post, api_get_file_data_get, api_get_package_data_get, api_get_package_order_get, api_move_files_post, api_move_package_post, api_order_file_post, api_order_package_post, api_pause_server_post,     api_restart_file_post, api_restart_package_post, api_restart_failed_post, api_set_package_data_post, api_status_downloads_get, api_stop_all_downloads_post, api_stop_downloads_post, api_toggle_pause_post, api_unpause_server_post,
 };
 use openapi::models::{
     ApiAddFilesPostRequest, ApiAddPackagePostRequest, ApiDeleteFilesPostRequest, ApiDeletePackagesPostRequest,
@@ -161,6 +161,18 @@ pub async fn restart_failed() -> Result<(), Error<ApiRestartFailedPostError>> {
 
 pub async fn stop_all_downloads() -> Result<(), Error<ApiStopAllDownloadsPostError>> {
     api_stop_all_downloads_post(get_pyload_config()).await
+}
+
+pub async fn pause_server() -> Result<(), Error<ApiPauseServerPostError>> {
+    api_pause_server_post(get_pyload_config()).await
+}
+
+pub async fn unpause_server() -> Result<(), Error<ApiUnpauseServerPostError>> {
+    api_unpause_server_post(get_pyload_config()).await
+}
+
+pub async fn toggle_pause() -> Result<bool, Error<ApiTogglePausePostError>> {
+    api_toggle_pause_post(get_pyload_config()).await
 }
 
 pub async fn reorder_package(

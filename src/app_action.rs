@@ -14,6 +14,9 @@ pub enum AppAction {
     RestartPackage(i32),
     RestartFailed,
     AbortActive,
+    PauseServer,
+    UnpauseServer,
+    TogglePause,
     ReorderPackage(i32, i32),
     MovePackage(Destination, i32),
 }
