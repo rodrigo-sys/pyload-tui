@@ -102,8 +102,9 @@ impl App {
                         let _ = restart_failed().await;
                         let _ = unpause_server().await;
                     } else {
-                        let _ = stop_all_downloads().await;
                         let _ = pause_server().await;
+                        let _ = stop_all_downloads().await;
+                        let _ = restart_failed().await;
                     }
                 }
             }
