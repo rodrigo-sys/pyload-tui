@@ -13,6 +13,7 @@ pub enum AppAction {
     RestartFile(i32),
     RestartPackage(i32),
     RestartFailed,
+    AbortActive,
     ReorderPackage(i32, i32),
     MovePackage(Destination, i32),
 }
