@@ -3,7 +3,7 @@ use openapi::models::EventInfo;
 
 use crate::{
     add_package_form::AddPackageForm, app_action::AppAction, append_files_form::AppendFilesForm, files_screen::FilesScreen, packages_screen::PackagesScreen, screens::{Screen, ScreenHandler}, utils::{
-        fetch_file_data, fetch_files, fetch_package_data, fetch_packages, fetch_server_status, move_package, pause_server, remove_files_from_package, remove_packages, reorder_package, restart_failed, restart_file, restart_package, stop_all_downloads, stop_downloads, toggle_pause, unpause_server,
+        fetch_file_data, fetch_files, fetch_package_data, fetch_packages, fetch_server_status, move_package, pause_server, remove_files_from_package, remove_packages, reorder_file, reorder_package, restart_failed, restart_file, restart_package, stop_all_downloads, stop_downloads, toggle_pause, unpause_server,
     },
 };
 
@@ -120,6 +120,9 @@ impl App {
             Some(AppAction::ReorderPackage(pid, position)) => {
                 let _ = reorder_package(pid, position).await;
             }
+            Some(AppAction::ReorderFile(fid, position)) => {
+                let _ = reorder_file(fid, position).await;
+            }
             Some(AppAction::MovePackage(destination, pid)) => {
                 let _ = move_package(destination, pid).await;
             }
@@ -229,6 +232,10 @@ impl App {
                     };
 
                     files_screen.files = files;
+                    let Some(pos) = files_screen.files.iter().position(|f| f.fid == fid) else {
+                        return;
+                    };
+                    files_screen.table_state.select(Some(pos));
                 }
                 _ => {}
             },

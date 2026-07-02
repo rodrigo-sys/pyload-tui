@@ -19,5 +19,6 @@ pub enum AppAction {
     UnpauseServer,
     TogglePause,
     ReorderPackage(i32, i32),
+    ReorderFile(i32, i32),
     MovePackage(Destination, i32),
 }

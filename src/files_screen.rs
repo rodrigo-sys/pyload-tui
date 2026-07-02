@@ -66,6 +66,25 @@ impl ScreenHandler for FilesScreen {
                 let file = self.table_state.selected()?;
                 Some(AppAction::DeleteFiles(vec![self.files[file].fid]))
             }
+            KeyCode::Char('J') => {
+                let index = self.table_state.selected()?;
+                let file = &self.files[index];
+                let max_order = self.files.iter().map(|f| f.order).max().unwrap_or(0);
+                if file.order < max_order {
+                    Some(AppAction::ReorderFile(file.fid, file.order + 1))
+                } else {
+                    None
+                }
+            }
+            KeyCode::Char('K') => {
+                let index = self.table_state.selected()?;
+                let file = &self.files[index];
+                if file.order > 0 {
+                    Some(AppAction::ReorderFile(file.fid, file.order - 1))
+                } else {
+                    None
+                }
+            }
             _ => None,
         }
     }
