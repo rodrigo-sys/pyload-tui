@@ -14,6 +14,7 @@ pub enum AppAction {
     RestartPackage(i32),
     RestartFailed,
     AbortActive,
+    AbortAndPause,
     PauseServer,
     UnpauseServer,
     TogglePause,

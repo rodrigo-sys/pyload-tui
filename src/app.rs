@@ -54,6 +54,7 @@ impl App {
                 KeyCode::Char('A') => Some(AppAction::OpenAddPackageForm),
                 KeyCode::Char('R') => Some(AppAction::RestartFailed),
                 KeyCode::Char('S') => Some(AppAction::AbortActive),
+                KeyCode::Char('X') => Some(AppAction::AbortAndPause),
                 KeyCode::Char('P') => Some(AppAction::PauseServer),
                 KeyCode::Char('U') => Some(AppAction::UnpauseServer),
                 KeyCode::Char('T') => Some(AppAction::TogglePause),
@@ -94,6 +95,10 @@ impl App {
             }
             Some(AppAction::AbortActive) => {
                 let _ = stop_all_downloads().await;
+            }
+            Some(AppAction::AbortAndPause) => {
+                let _ = stop_all_downloads().await;
+                let _ = pause_server().await;
             }
             Some(AppAction::PauseServer) => {
                 let _ = pause_server().await;
