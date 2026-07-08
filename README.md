@@ -11,6 +11,11 @@ Terminal UI client for pyLoad.
 - Add packages
 - Append links to existing packages
 - Delete packages or individual files
+- Pause, unpause, and toggle download queue
+- Abort active downloads
+- Restart failed, finished, or selected files
+- Reorder packages and files
+- Move packages between collector and queue
 - Changes update in real time via API event polling
 
 ## Installation
@@ -68,18 +73,50 @@ Run `pyload-tui` in your terminal.
 
 ### Bindings
 
+#### Main
+
 | Key | Action |
 |---|---|
-| `j` / `k` | Move down / up |
-| `l` | Open package |
-| `h` | Go back (file list) |
+| `h`, `j`, `k`, `l` | navigate |
 | `q` | Quit |
-| `d` | Delete selected |
 | `A` | Add new package |
-| `a` | Add links to selected package |
-| `Esc` | Go back (forms) |
+| `a` | Add links to package |
+| `d` | Delete selected item |
+| `J` / `K` | Reorder down / up |
+| `r` | Restart selected item |
+
+
+#### Packages screen
+
+| Key | Action |
+|---|---|
+| `m` | Move between collector / queue |
+
+
+#### Files screen
+
+| Key | Action |
+|---|---|
+| `s` | Stop file download |
+
+#### General
+
+| Key | Action |
+|---|---|
+| `S` | Abort active downloads |
+| `P` | Pause queue |
+| `U` | Unpause queue |
+| `T` | Toggle queue state |
+| `X` | Abort downloads + pause queue / restart failed + unpause queue |
+| `R` | Restart all failed files |
+
+#### Forms
+
+| Key | Action |
+|---|---|
+| `Esc` | Go back |
 | `Tab` / `Shift+Tab` | Cycle form fields |
-| `Enter` | Toggle / submit (forms) |
+| `Enter` | Toggle / submit |
 
 ## Build from source
 
