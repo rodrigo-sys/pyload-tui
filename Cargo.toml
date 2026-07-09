@@ -2,6 +2,12 @@
 name = "pyload-tui"
 version = "0.41.0"
 edition = "2024"
+repository = "https://github.com/rodrigo-sys/pyload-tui"
+
+[package.metadata.binstall.overrides.'cfg(target_os = "linux")']
+pkg-url = "{ repo }/releases/download/{ version }/{ name }"
+pkg-fmt = "bin"
+bin-dir = ""
 
 [dependencies]
 crossterm = "0.29.0"
