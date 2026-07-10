@@ -24,6 +24,12 @@ Terminal UI client for pyLoad.
 cargo install --git https://github.com/rodrigo-sys/pyload-tui.git
 ```
 
+or with [cargo-binstall](https://github.com/cargo-bins/cargo-binstall) (precompiled):
+
+```bash
+cargo binstall --git 'https://github.com/rodrigo-sys/pyload-tui' pyload-tui
+```
+
 ## Prerequisites
 
 <details>
