@@ -6,44 +6,92 @@ permissions:
   contents: write
 
 jobs:
-  check-release-exists:
+  draft:
     runs-on: ubuntu-latest
-    outputs:
-      release_exists: ${{ steps.check_release.outputs.release_exists }}
-      tag: ${{ steps.check_release.outputs.tag }}
     env:
       GH_TOKEN: ${{ github.token }}
+    outputs:
+      tag: ${{ steps.get_tag.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - id: check_release
+      - name: Get tag
+        id: get_tag
         run: |
-          TAG="$(git describe --tags --abbrev=0)"
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          if gh release view "$TAG" &>/dev/null; then
-            echo "release_exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "release_exists=false" >> "$GITHUB_OUTPUT"
+          tag="$(git describe --tags --abbrev=0)" ; [ -n "$tag" ] || exit 1
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+      - name: Create draft release
+        run: |
+          tag="${{ steps.get_tag.outputs.tag }}"
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" --draft --title "$tag"
           fi
 
   release:
-    needs: check-release-exists
-    if: needs.check-release-exists.outputs.release_exists == 'false'
-    runs-on: ubuntu-latest
+    needs: draft
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            binary_name: "pyload-tui-linux"
+          - os: macos-latest
+            binary_name: "pyload-tui-mac"
+          - os: windows-latest
+            binary_name: "pyload-tui-windows.exe"
+            ext: ".exe"
+    runs-on: ${{ matrix.os }}
     env:
       GH_TOKEN: ${{ github.token }}
-      BINARY_PATH: 'target/release/pyload-tui'
+      TARGET: ''
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Build
-        run: cargo build --release
-      - name: Create release
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Cache cargo dependencies
+        uses: Swatinem/rust-cache@v2
+      - name: Set target triple
         run: |
-          gh release create "${{ needs.check-release-exists.outputs.tag }}" "$BINARY_PATH" --title "${{ needs.check-release-exists.outputs.tag }}"
+          target="$(rustc --version --verbose | awk '/host:/ { print $2 }')" ; [ -n "$target" ] || exit 1
+          echo "TARGET=$target" >> "$GITHUB_ENV"
+      - name: Build
+        run: cargo build --target "${{ env.TARGET }}" --release
+      - name: Locate and rename binary
+        run: |
+          binary_path="target/${{ env.TARGET }}/release/pyload-tui${{ matrix.ext }}"
+
+          [ -f "$binary_path" ] || exit 1
+
+          mv "$binary_path" "${{ matrix.binary_name }}"
+
+          echo "BINARY_PATH=${{ matrix.binary_name }}" >> "$GITHUB_ENV"
+      - name: Upload to release
+        run: gh release upload "${{ needs.draft.outputs.tag }}" "$BINARY_PATH"
+
+  publish:
+    needs: [draft, release]
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Publish release
+        run: gh release edit "${{ needs.draft.outputs.tag }}" --draft=false
+
+  cleanup:
+    needs: publish
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
       - name: Remove previous releases
         run: |
-          gh release list --limit 1000 --json tagName --jq '.[1:].[].tagName' |
+          gh release list --limit 1000 --json tagName --jq '.[1:][] | .tagName' |
           xargs -r -I{} gh release delete '{}' --yes
