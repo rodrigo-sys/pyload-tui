@@ -1,13 +1,15 @@
 use ratatui::{
-    prelude::{Buffer, Rect},
-    widgets::Widget,
+    prelude::{Buffer, Rect}, style::{Color, Style}, text::Span, widgets::Widget,
 };
 
-struct StatusBar {
+#[derive(Clone)]
+pub struct StatusBar {
 }
 
 impl Widget for StatusBar {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        todo!()
+        Span::styled("PAUSED",
+            Style::new().bg(Color::Yellow).fg(Color::Black).bold()
+        ).render(area, buf);
     }
 }

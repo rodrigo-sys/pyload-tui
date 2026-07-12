@@ -61,6 +61,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
 
             frame.render_widget(KeyHints::new(&app.get_bindings()), areas[1]);
+            frame.render_widget(app.status_bar.clone(), areas[1]);
         })?;
 
         if event::poll(tick_rate)? {
