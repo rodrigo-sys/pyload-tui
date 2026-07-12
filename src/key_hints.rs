@@ -16,6 +16,13 @@ impl<'a> KeyHints<'a> {
 
 impl Widget for KeyHints<'_> {
     fn render(self, area: Rect, buf: &mut Buffer) {
+        let area = Rect {
+            x: area.x,
+            y: area.y + 1,
+            width: area.width,
+            height: area.height.saturating_sub(1),
+        };
+
         let mut lines = Vec::new();
 
         for chunks in self.bindings.chunks(5) {
