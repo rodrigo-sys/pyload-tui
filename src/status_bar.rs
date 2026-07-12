@@ -14,8 +14,8 @@ impl StatusBar {
     pub fn new() -> Self {
         let rows = vec![
             Row::new(vec!["QUEUE:", "PAUSED"]).style(Style::new().fg(Color::Yellow).bold()),
-            Row::new(vec!["ACTIVE:", "200"]).style(Style::new().fg(Color::Magenta).bold()),
-            Row::new(vec!["SPEED:", "120kps"]).style(Style::new().fg(Color::Blue).bold()),
+            Row::new(vec!["ACTIVE:", "0"]).style(Style::new().fg(Color::Magenta).bold()),
+            Row::new(vec!["SPEED:", "-"]).style(Style::new().fg(Color::Blue).bold()),
         ];
 
         let table = Table::new(rows, vec![Constraint::Length(10), Constraint::Length(10)])
