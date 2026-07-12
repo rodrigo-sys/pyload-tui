@@ -2,8 +2,18 @@ use crossterm::event::{Event, KeyCode, KeyEvent};
 use openapi::models::EventInfo;
 
 use crate::{
-    add_package_form::AddPackageForm, app_action::AppAction, append_files_form::AppendFilesForm, files_screen::FilesScreen, packages_screen::PackagesScreen, screens::{Screen, ScreenHandler}, utils::{
-        fetch_file_data, fetch_files, fetch_package_data, fetch_packages, fetch_server_status, move_package, pause_server, remove_files_from_package, remove_packages, reorder_file, reorder_package, restart_failed, restart_file, restart_package, stop_all_downloads, stop_downloads, toggle_pause, unpause_server,
+    add_package_form::AddPackageForm,
+    app_action::AppAction,
+    append_files_form::AppendFilesForm,
+    files_screen::FilesScreen,
+    packages_screen::PackagesScreen,
+    screens::{Screen, ScreenHandler},
+    status_bar::StatusBar,
+    utils::{
+        fetch_file_data, fetch_files, fetch_package_data, fetch_packages, fetch_server_status,
+        move_package, pause_server, remove_files_from_package, remove_packages, reorder_file,
+        reorder_package, restart_failed, restart_file, restart_package, stop_all_downloads,
+        stop_downloads, toggle_pause, unpause_server,
     },
 };
 
@@ -22,6 +32,7 @@ macro_rules! find_screen {
 pub struct App {
     pub current_screen: Screen,
     pub previous_screen: Option<Screen>,
+    pub status_bar: StatusBar,
     pub quit: bool,
 }
 
@@ -32,6 +43,7 @@ impl App {
             current_screen: Screen::Packages(packages),
             previous_screen: None,
             quit: false,
+            status_bar: StatusBar::new(),
         }
     }
 
@@ -48,9 +60,8 @@ impl App {
 
         if action.is_none() {
             action = match key.code {
-                KeyCode::Char('q') => {
-                    (!matches!(&self.current_screen, Screen::AddPackageForm(_))).then_some(AppAction::Quit)
-                }
+                KeyCode::Char('q') => (!matches!(&self.current_screen, Screen::AddPackageForm(_)))
+                    .then_some(AppAction::Quit),
                 KeyCode::Char('A') => Some(AppAction::OpenAddPackageForm),
                 KeyCode::Char('R') => Some(AppAction::RestartFailed),
                 KeyCode::Char('S') => Some(AppAction::AbortActive),
@@ -65,7 +76,9 @@ impl App {
         match action {
             Some(AppAction::Quit) => self.quit = true,
             Some(AppAction::OpenAddPackageForm) => self.go_to_add_package_form(),
-            Some(AppAction::OpenAppendFilesForm(pid, name)) => self.go_to_append_files_form(pid, name),
+            Some(AppAction::OpenAppendFilesForm(pid, name)) => {
+                self.go_to_append_files_form(pid, name)
+            }
             Some(AppAction::GoToPackages) => self.go_to_packages(),
             Some(AppAction::GoToFiles(pid, name)) => self.go_to_files(pid, name).await,
             Some(AppAction::DeletePackages(packages)) => {
@@ -147,7 +160,8 @@ impl App {
                         return;
                     };
 
-                    let refetch = screen.packages[position].linkstotal.flatten() != package.linkstotal.flatten();
+                    let refetch = screen.packages[position].linkstotal.flatten()
+                        != package.linkstotal.flatten();
                     screen.packages[position] = package;
                     let _ = screen;
 
@@ -169,7 +183,8 @@ impl App {
                     if files_screen.package_id != file.package_id {
                         return;
                     }
-                    let Some(position) = files_screen.files.iter().position(|f| f.fid == fid) else {
+                    let Some(position) = files_screen.files.iter().position(|f| f.fid == fid)
+                    else {
                         return;
                     };
 
@@ -193,7 +208,8 @@ impl App {
                     let Some(files_screen) = find_screen!(self, Files) else {
                         return;
                     };
-                    let Some(position) = files_screen.files.iter().position(|f| f.fid == fid) else {
+                    let Some(position) = files_screen.files.iter().position(|f| f.fid == fid)
+                    else {
                         return;
                     };
 
@@ -210,9 +226,14 @@ impl App {
                         return;
                     };
 
-                    let position = screen.packages.iter().position(|p| {
-                        p.dest < package.dest || (p.dest == package.dest && p.order > package.order)
-                    }).unwrap_or(screen.packages.len());
+                    let position = screen
+                        .packages
+                        .iter()
+                        .position(|p| {
+                            p.dest < package.dest
+                                || (p.dest == package.dest && p.order > package.order)
+                        })
+                        .unwrap_or(screen.packages.len());
 
                     screen.packages.insert(position, package);
                     screen.table_state.select(Some(position));
@@ -252,11 +273,9 @@ impl App {
     }
 
     fn go_to_previous_screen(&mut self) {
-        if self
-            .previous_screen
-            .as_ref()
-            .is_none_or(|prev| std::mem::discriminant(&self.current_screen) == std::mem::discriminant(prev))
-        {
+        if self.previous_screen.as_ref().is_none_or(|prev| {
+            std::mem::discriminant(&self.current_screen) == std::mem::discriminant(prev)
+        }) {
             return;
         }
 
@@ -277,7 +296,10 @@ impl App {
             return;
         }
 
-        let old = std::mem::replace(&mut self.current_screen, Screen::AddPackageForm(AddPackageForm::default()));
+        let old = std::mem::replace(
+            &mut self.current_screen,
+            Screen::AddPackageForm(AddPackageForm::default()),
+        );
         self.previous_screen = Some(old);
     }
 
@@ -293,7 +315,10 @@ impl App {
             return;
         }
 
-        let old = std::mem::replace(&mut self.current_screen, Screen::Packages(PackagesScreen::default()));
+        let old = std::mem::replace(
+            &mut self.current_screen,
+            Screen::Packages(PackagesScreen::default()),
+        );
         self.previous_screen = Some(old);
     }
 
@@ -313,7 +338,10 @@ impl App {
             }
         }
 
-        let old = std::mem::replace(&mut self.current_screen, Screen::Files(FilesScreen::new(pid, name).await));
+        let old = std::mem::replace(
+            &mut self.current_screen,
+            Screen::Files(FilesScreen::new(pid, name).await),
+        );
         self.previous_screen = Some(old);
     }
 
@@ -322,17 +350,30 @@ impl App {
             return;
         }
 
-        let old = std::mem::replace(&mut self.current_screen, Screen::AppendFilesForm(AppendFilesForm::new(pid, name)));
+        let old = std::mem::replace(
+            &mut self.current_screen,
+            Screen::AppendFilesForm(AppendFilesForm::new(pid, name)),
+        );
         self.previous_screen = Some(old);
     }
 
     pub fn get_bindings(&self) -> Vec<(&'static str, &'static str)> {
         match &self.current_screen {
             Screen::AddPackageForm(_) => {
-                vec![("Esc", "back"), ("Tab", "next"), ("Shift+Tab", "prev"), ("Enter", "newline/toggle/submit")]
+                vec![
+                    ("Esc", "back"),
+                    ("Tab", "next"),
+                    ("Shift+Tab", "prev"),
+                    ("Enter", "newline/toggle/submit"),
+                ]
             }
             Screen::AppendFilesForm(_) => {
-                vec![("Esc", "back"), ("Tab", "next"), ("Shift+Tab", "prev"), ("Enter", "newline/submit")]
+                vec![
+                    ("Esc", "back"),
+                    ("Tab", "next"),
+                    ("Shift+Tab", "prev"),
+                    ("Enter", "newline/submit"),
+                ]
             }
             _ => {
                 let mut binds = vec![
@@ -360,6 +401,7 @@ impl Default for App {
             current_screen: Screen::Packages(packages),
             previous_screen: None,
             quit: false,
+            status_bar: StatusBar::new(),
         }
     }
 }

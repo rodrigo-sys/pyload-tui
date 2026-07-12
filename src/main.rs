@@ -38,7 +38,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let layout = Layout::new(
         Direction::Vertical,
-        vec![Constraint::Percentage(90), Constraint::Percentage(10)],
+        vec![Constraint::Percentage(90), Constraint::Length(5)],
+    );
+    let status_layout = Layout::new(
+        Direction::Horizontal,
+        vec![
+            Constraint::Length(1),
+            Constraint::Length(20),
+            Constraint::Min(0),
+        ],
     );
 
     while !app.quit {
@@ -61,7 +69,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
 
             frame.render_widget(KeyHints::new(&app.get_bindings()), areas[1]);
-            frame.render_widget(app.status_bar.clone(), areas[1]);
+
+            let status_area = status_layout.split(areas[1]);
+
+            frame.render_widget(app.status_bar.clone(), status_area[1]);
         })?;
 
         if event::poll(tick_rate)? {
