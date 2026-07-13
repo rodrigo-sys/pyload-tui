@@ -91,6 +91,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
+      - uses: actions/checkout@v4
       - name: Remove previous releases
         run: |
           gh release list --limit 1000 --json tagName --jq '.[1:][] | .tagName' |
