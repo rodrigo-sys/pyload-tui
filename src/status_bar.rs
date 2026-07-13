@@ -41,16 +41,16 @@ pub struct StatusTable(pub Table<'static>);
 
 impl From<ServerStatus> for StatusTable {
     fn from(server_status: ServerStatus) -> Self {
+
+        let (queue_label, queue_color) = if server_status.pause {
+            ("PAUSED", Color::Yellow)
+        } else {
+            ("UNPAUSED", Color::Green)
+        };
+
         let rows = vec![
-            Row::new(vec![
-                "QUEUE:",
-                if server_status.pause {
-                    "PAUSED"
-                } else {
-                    "UNPAUSED"
-                },
-            ])
-            .style(Style::new().fg(Color::Yellow).bold()),
+            Row::new(vec!["QUEUE:", queue_label])
+                .style(Style::new().fg(queue_color).bold()),
             Row::new(vec![
                 "ACTIVE:".to_string(),
                 server_status.active.to_string(),
