@@ -3,8 +3,10 @@ use std::time::Duration;
 use crossterm::event::{self, DisableBracketedPaste, EnableBracketedPaste};
 use crossterm::execute;
 use openapi::apis::py_load_rest_api::api_get_events_get;
-use openapi::models::ServerStatus;
-use pyload_tui::utils::{ensure_app_config_exists, fetch_server_status, get_pyload_config};
+use openapi::models::{DownloadInfo, ServerStatus};
+use pyload_tui::utils::{
+    ensure_app_config_exists, fetch_downloads_info, fetch_server_status, get_pyload_config,
+};
 use pyload_tui::{app::App, key_hints::KeyHints, screens::Screen};
 use ratatui::layout::{Constraint, Direction, Layout};
 use tokio::sync::{mpsc, watch};
@@ -30,11 +32,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
 
-            let _ = tokio::time::sleep(Duration::from_secs(3));
+            let _ = tokio::time::sleep(Duration::from_secs(1));
+            // let _ = tokio::time::sleep(Duration::from_secs(3));
         }
     });
 
     let (status_tx, status_rx) = watch::channel(ServerStatus::default());
+    let (dl_tx, dl_rx) = watch::channel(Vec::<DownloadInfo>::new());
 
     tokio::spawn(async move {
         loop {
@@ -43,10 +47,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             };
 
             status_tx
-                .send(server_status)
+                .send(server_status.clone())
                 .expect("Error sending status server");
 
-            let _ = tokio::time::sleep(Duration::from_secs(1)).await;
+            let downloads_info = if server_status.active > 0 {
+                fetch_downloads_info().await
+            } else {
+                Vec::new()
+            };
+            dl_tx.send(downloads_info).expect("Error sending downloads info");
+
+            tokio::time::sleep(Duration::from_secs(1)).await;
         }
     });
 
@@ -104,6 +115,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         if status_rx.has_changed().unwrap_or(false) {
             app.update_status(status_rx.borrow().clone());
+        }
+
+        if dl_rx.has_changed().unwrap_or(false) {
+            app.update_downloads_info(dl_rx.borrow().clone());
         }
     }
 

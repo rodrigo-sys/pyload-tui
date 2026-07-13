@@ -11,7 +11,7 @@ use crate::{
     screens::{Screen, ScreenHandler},
     status_bar::StatusBar,
     utils::{
-        fetch_downloads_info, fetch_file_data, fetch_files, fetch_package_data, fetch_packages, fetch_server_status,
+        fetch_file_data, fetch_files, fetch_package_data, fetch_packages, fetch_server_status,
         move_package, pause_server, remove_files_from_package, remove_packages, reorder_file,
         reorder_package, restart_failed, restart_file, restart_package, stop_all_downloads,
         stop_downloads, toggle_pause, unpause_server,
@@ -61,9 +61,11 @@ impl App {
     }
 
     pub fn update_downloads_info(&mut self, info: Vec<DownloadInfo>) {
-        if let Some(s) = find_screen!(self, Downloads)
-            && s.downloads_info != info
-        {
+        if let Some(s) = find_screen!(self, Downloads) {
+            s.downloads_info = info.clone();
+        }
+
+        if let Some(s) = find_screen!(self, Files) {
             s.downloads_info = info;
         }
     }
@@ -280,9 +282,6 @@ impl App {
             }
             _ => {}
         }
-
-        let info = fetch_downloads_info().await;
-        self.update_downloads_info(info);
     }
 
     fn go_to_previous_screen(&mut self) {
@@ -425,18 +424,6 @@ impl App {
                 }
                 binds
             }
-        }
-    }
-}
-
-impl Default for App {
-    fn default() -> Self {
-        let packages = PackagesScreen::default();
-        Self {
-            current_screen: Screen::Packages(packages),
-            previous_screen: None,
-            quit: false,
-            status_bar: StatusBar::new(),
         }
     }
 }

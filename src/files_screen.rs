@@ -7,7 +7,8 @@ use ratatui::{
 };
 
 use crate::{
-    app_action::AppAction, screens::ScreenHandler, table::FilesTable, utils::{fetch_downloads_info, fetch_files, },
+    app_action::AppAction, screens::ScreenHandler, table::FilesTable,
+    utils::{fetch_downloads_info, fetch_files},
 };
 
 #[derive(Clone)]
@@ -32,9 +33,6 @@ impl FilesScreen {
         }
     }
 
-    pub async fn refresh_downloads_info(&mut self) {
-        self.downloads_info = fetch_downloads_info().await;
-    }
 }
 
 impl ScreenHandler for FilesScreen {

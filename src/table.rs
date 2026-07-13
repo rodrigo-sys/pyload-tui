@@ -130,7 +130,7 @@ fn format_size(done: i64, total: i64) -> String {
     format!("{} / {}", done_str, total_str)
 }
 
-fn format_bytes(bytes: i64) -> String {
+pub fn format_bytes(bytes: i64) -> String {
     const KB: i64 = 1024;
     const MB: i64 = KB * 1024;
     const GB: i64 = MB * 1024;
