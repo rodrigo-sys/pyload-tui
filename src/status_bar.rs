@@ -60,7 +60,7 @@ impl From<ServerStatus> for StatusTable {
             .style(Style::new().fg(Color::Magenta).bold()),
             Row::new(vec![
                 "SPEED:".to_string(),
-                if server_status.download {
+                if server_status.active > 0 {
                     format_speed(server_status.speed)
                 } else {
                     "―".to_string()
