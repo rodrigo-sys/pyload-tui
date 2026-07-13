@@ -32,8 +32,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
 
-            let _ = tokio::time::sleep(Duration::from_secs(1));
-            // let _ = tokio::time::sleep(Duration::from_secs(3));
+            let _ = tokio::time::sleep(Duration::from_secs(3));
         }
     });
 
@@ -68,12 +67,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Direction::Vertical,
         vec![Constraint::Percentage(90), Constraint::Length(5)],
     );
-    let status_layout = Layout::new(
+    let bottom_layout = Layout::new(
         Direction::Horizontal,
         vec![
             Constraint::Length(1),
             Constraint::Length(20),
+            Constraint::Length(1),
             Constraint::Min(0),
+            Constraint::Length(15),
         ],
     );
 
@@ -98,11 +99,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     frame.render_widget(s.clone(), areas[0]);
                 }
             }
-            frame.render_widget(KeyHints::new(&app.get_bindings()), areas[1]);
 
-            let status_area = status_layout.split(areas[1]);
-
-            frame.render_widget(app.status_bar.clone(), status_area[1]);
+            let bottom_area = bottom_layout.split(areas[1]);
+            frame.render_widget(app.status_bar.clone(), bottom_area[1]);
+            frame.render_widget(KeyHints::new(&app.get_bindings()), bottom_area[3]);
         })?;
 
         if event::poll(tick_rate)? {
