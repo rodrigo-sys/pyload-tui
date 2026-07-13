@@ -6,6 +6,7 @@ use crate::{
     add_package_form::AddPackageForm,
     app_action::AppAction,
     append_files_form::AppendFilesForm,
+    downloads_screen::DownloadsScreen,
     files_screen::FilesScreen,
     packages_screen::PackagesScreen,
 };
@@ -23,6 +24,7 @@ pub trait ScreenHandler {
 pub enum Screen {
     Packages(PackagesScreen),
     Files(FilesScreen),
+    Downloads(DownloadsScreen),
     AddPackageForm(AddPackageForm),
     AppendFilesForm(AppendFilesForm),
 }

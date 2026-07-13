@@ -9,3 +9,4 @@ pub mod key_hints;
 pub mod add_package_form;
 pub mod append_files_form;
 pub mod status_bar;
+pub mod downloads_screen;

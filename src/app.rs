@@ -5,6 +5,7 @@ use crate::{
     add_package_form::AddPackageForm,
     app_action::AppAction,
     append_files_form::AppendFilesForm,
+    downloads_screen::DownloadsScreen,
     files_screen::FilesScreen,
     packages_screen::PackagesScreen,
     screens::{Screen, ScreenHandler},
@@ -73,6 +74,7 @@ impl App {
                 KeyCode::Char('P') => Some(AppAction::PauseServer),
                 KeyCode::Char('U') => Some(AppAction::UnpauseServer),
                 KeyCode::Char('T') => Some(AppAction::TogglePause),
+                KeyCode::Char('D') => Some(AppAction::GoToDownloads),
                 _ => None,
             };
         }
@@ -84,6 +86,7 @@ impl App {
                 self.go_to_append_files_form(pid, name)
             }
             Some(AppAction::GoToPackages) => self.go_to_packages(),
+            Some(AppAction::GoToDownloads) => self.go_to_downloads(),
             Some(AppAction::GoToFiles(pid, name)) => self.go_to_files(pid, name).await,
             Some(AppAction::DeletePackages(packages)) => {
                 if let Some(package_id) = packages.first() {
@@ -326,6 +329,25 @@ impl App {
         self.previous_screen = Some(old);
     }
 
+    fn go_to_downloads(&mut self) {
+        if matches!(&self.current_screen, Screen::Downloads(_)) {
+            return;
+        }
+
+        if let Some(Screen::Downloads(_)) = &self.previous_screen {
+            let prev = self.previous_screen.take().unwrap();
+            let old = std::mem::replace(&mut self.current_screen, prev);
+            self.previous_screen = Some(old);
+            return;
+        }
+
+        let old = std::mem::replace(
+            &mut self.current_screen,
+            Screen::Downloads(DownloadsScreen::default()),
+        );
+        self.previous_screen = Some(old);
+    }
+
     async fn go_to_files(&mut self, pid: i32, name: String) {
         if let Screen::Files(screen) = &self.current_screen {
             if screen.package_id == pid {
@@ -390,6 +412,9 @@ impl App {
                     ("d", "delete"),
                 ];
                 if matches!(&self.current_screen, Screen::Files(_)) {
+                    binds.insert(0, ("h", "go back"));
+                }
+                if matches!(&self.current_screen, Screen::Downloads(_)) {
                     binds.insert(0, ("h", "go back"));
                 }
                 binds

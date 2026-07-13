@@ -4,7 +4,6 @@ use crossterm::event::{self, DisableBracketedPaste, EnableBracketedPaste};
 use crossterm::execute;
 use openapi::apis::py_load_rest_api::api_get_events_get;
 use openapi::models::ServerStatus;
-use pyload_tui::status_bar::StatusBar;
 use pyload_tui::utils::{ensure_app_config_exists, fetch_server_status, get_pyload_config};
 use pyload_tui::{app::App, key_hints::KeyHints, screens::Screen};
 use ratatui::layout::{Constraint, Direction, Layout};
@@ -38,7 +37,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (status_tx, mut status_rx) = watch::channel(ServerStatus::default());
     tokio::spawn(async move {
         loop {
-            let Ok(server_status) = fetch_server_status().await else { continue };
+            let Ok(server_status) = fetch_server_status().await else {
+                continue;
+            };
 
             status_tx
                 .send(server_status)
@@ -75,6 +76,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Screen::Files(s) => {
                     frame.render_stateful_widget(s.clone(), areas[0], &mut s.table_state);
                 }
+                Screen::Downloads(s) => {
+                    frame.render_stateful_widget(s.clone(), areas[0], &mut s.table_state);
+                }
                 Screen::AddPackageForm(s) => {
                     frame.render_widget(s.clone(), areas[0]);
                 }
@@ -82,7 +86,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     frame.render_widget(s.clone(), areas[0]);
                 }
             }
-
             frame.render_widget(KeyHints::new(&app.get_bindings()), areas[1]);
 
             let status_area = status_layout.split(areas[1]);
@@ -101,7 +104,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         if status_rx.has_changed().unwrap_or(false) {
             app.update_status(status_rx.borrow().clone());
         }
-
     }
 
     execute!(std::io::stdout(), DisableBracketedPaste)?;

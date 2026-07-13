@@ -4,6 +4,7 @@ pub enum AppAction {
     Quit,
     GoToPackages,
     GoToFiles(i32, String),
+    GoToDownloads,
     GoToPreviousScreen,
     OpenAddPackageForm,
     OpenAppendFilesForm(i32, String),
