@@ -7,11 +7,11 @@ use ratatui::{
     widgets::{Row, StatefulWidget, Table, TableState},
 };
 
-use crate::{app_action::AppAction, screens::ScreenHandler};
+use crate::{app_action::AppAction, screens::ScreenHandler, table::format_bytes};
 
 #[derive(Clone)]
 pub struct DownloadsScreen {
-    downloads_info: Vec<DownloadInfo>,
+    pub downloads_info: Vec<DownloadInfo>,
     pub table_state: TableState,
 }
 
@@ -61,11 +61,19 @@ pub struct DownloadsTable(pub Table<'static>);
 impl From<Vec<DownloadInfo>> for DownloadsTable {
     fn from(downloads_info: Vec<DownloadInfo>) -> Self {
         let rows = downloads_info.into_iter().map(|d| {
+            let info = match d.status {
+                DownloadStatus::DOWNLOADING => {
+                    format!("{} @ {}/s", d.format_eta, format_bytes(d.speed))
+                }
+                DownloadStatus::WAITING => format!("waiting {}", d.format_wait),
+                _ => String::new(),
+            };
+
             Row::new(vec![
                 d.statusmsg,
                 d.name,
                 d.plugin,
-                d.info,
+                info,
                 d.format_size,
                 d.percent.to_string(),
             ])
