@@ -409,6 +409,13 @@ impl App {
                     ("Enter", "newline/submit"),
                 ]
             }
+            Screen::Downloads(_) => vec![
+                ("h", "go back"),
+                ("j", "next"),
+                ("k", "prev"),
+                ("q", "quit"),
+                ("A", "add package"),
+            ],
             _ => {
                 let mut binds = vec![
                     ("j", "next item"),
@@ -420,9 +427,6 @@ impl App {
                     ("d", "delete"),
                 ];
                 if matches!(&self.current_screen, Screen::Files(_)) {
-                    binds.insert(0, ("h", "go back"));
-                }
-                if matches!(&self.current_screen, Screen::Downloads(_)) {
                     binds.insert(0, ("h", "go back"));
                 }
                 binds
