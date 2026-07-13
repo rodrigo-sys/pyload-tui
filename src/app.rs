@@ -63,6 +63,9 @@ impl App {
     pub fn update_downloads_info(&mut self, info: Vec<DownloadInfo>) {
         if let Some(s) = find_screen!(self, Downloads) {
             s.downloads_info = info.clone();
+            if !s.downloads_info.is_empty() && s.table_state.selected().is_none() {
+                s.table_state.select(Some(0));
+            }
         }
 
         if let Some(s) = find_screen!(self, Files) {
