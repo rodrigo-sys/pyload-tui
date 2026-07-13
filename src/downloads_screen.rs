@@ -1,5 +1,5 @@
 use crossterm::event::{KeyCode, KeyEvent};
-use openapi::models::{DownloadInfo, DownloadStatus};
+use openapi::models::DownloadInfo;
 use ratatui::{
     layout::Constraint,
     prelude::{Buffer, Rect},
@@ -11,7 +11,7 @@ use crate::{app_action::AppAction, screens::ScreenHandler};
 
 #[derive(Clone)]
 pub struct DownloadsScreen {
-    downloads_info: Vec<DownloadInfo>,
+    pub downloads_info: Vec<DownloadInfo>,
     pub table_state: TableState,
 }
 

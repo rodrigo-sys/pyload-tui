@@ -1,5 +1,5 @@
 use crossterm::event::{Event, KeyCode, KeyEvent};
-use openapi::models::{EventInfo, ServerStatus};
+use openapi::models::{DownloadInfo, EventInfo, ServerStatus};
 
 use crate::{
     add_package_form::AddPackageForm,
@@ -11,7 +11,7 @@ use crate::{
     screens::{Screen, ScreenHandler},
     status_bar::StatusBar,
     utils::{
-        fetch_file_data, fetch_files, fetch_package_data, fetch_packages, fetch_server_status,
+        fetch_downloads_info, fetch_file_data, fetch_files, fetch_package_data, fetch_packages, fetch_server_status,
         move_package, pause_server, remove_files_from_package, remove_packages, reorder_file,
         reorder_package, restart_failed, restart_file, restart_package, stop_all_downloads,
         stop_downloads, toggle_pause, unpause_server,
@@ -58,6 +58,14 @@ impl App {
 
     pub fn update_status(&mut self, server_status: ServerStatus) {
         self.status_bar.refresh(server_status);
+    }
+
+    pub fn update_downloads_info(&mut self, info: Vec<DownloadInfo>) {
+        if let Some(s) = find_screen!(self, Downloads)
+            && s.downloads_info != info
+        {
+            s.downloads_info = info;
+        }
     }
 
     pub async fn handle_key(&mut self, key: KeyEvent) {
@@ -181,22 +189,17 @@ impl App {
                     }
                 }
                 (Some(1), Some(fid)) => {
-                    let Some(files_screen) = find_screen!(self, Files) else {
-                        return;
-                    };
-                    let Ok(file) = fetch_file_data(fid).await else {
-                        return;
-                    };
-                    if files_screen.package_id != file.package_id {
-                        return;
+                    if let Some(files_screen) = find_screen!(self, Files) {
+                        if let Ok(file) = fetch_file_data(fid).await {
+                            if files_screen.package_id == file.package_id {
+                                if let Some(position) =
+                                    files_screen.files.iter().position(|f| f.fid == fid)
+                                {
+                                    files_screen.files[position] = file;
+                                }
+                            }
+                        }
                     }
-                    let Some(position) = files_screen.files.iter().position(|f| f.fid == fid)
-                    else {
-                        return;
-                    };
-
-                    files_screen.files[position] = file;
-                    files_screen.refresh_downloads_info().await;
                 }
                 _ => {}
             },
@@ -277,6 +280,9 @@ impl App {
             }
             _ => {}
         }
+
+        let info = fetch_downloads_info().await;
+        self.update_downloads_info(info);
     }
 
     fn go_to_previous_screen(&mut self) {

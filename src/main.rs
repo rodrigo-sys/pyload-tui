@@ -34,7 +34,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    let (status_tx, mut status_rx) = watch::channel(ServerStatus::default());
+    let (status_tx, status_rx) = watch::channel(ServerStatus::default());
+
     tokio::spawn(async move {
         loop {
             let Ok(server_status) = fetch_server_status().await else {
