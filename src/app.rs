@@ -1,5 +1,5 @@
 use crossterm::event::{Event, KeyCode, KeyEvent};
-use openapi::models::EventInfo;
+use openapi::models::{EventInfo, ServerStatus};
 
 use crate::{
     add_package_form::AddPackageForm,
@@ -53,6 +53,10 @@ impl App {
             Event::Paste(content) => self.current_screen.handle_paste(&content),
             _ => {}
         }
+    }
+
+    pub fn update_status(&mut self, server_status: ServerStatus) {
+        self.status_bar.refresh(server_status);
     }
 
     pub async fn handle_key(&mut self, key: KeyEvent) {

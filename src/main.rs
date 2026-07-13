@@ -3,10 +3,12 @@ use std::time::Duration;
 use crossterm::event::{self, DisableBracketedPaste, EnableBracketedPaste};
 use crossterm::execute;
 use openapi::apis::py_load_rest_api::api_get_events_get;
-use pyload_tui::utils::{ensure_app_config_exists, get_pyload_config};
+use openapi::models::ServerStatus;
+use pyload_tui::status_bar::StatusBar;
+use pyload_tui::utils::{ensure_app_config_exists, fetch_server_status, get_pyload_config};
 use pyload_tui::{app::App, key_hints::KeyHints, screens::Screen};
 use ratatui::layout::{Constraint, Direction, Layout};
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, watch};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -30,6 +32,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
 
             let _ = tokio::time::sleep(Duration::from_secs(3));
+        }
+    });
+
+    let (status_tx, mut status_rx) = watch::channel(ServerStatus::default());
+    tokio::spawn(async move {
+        loop {
+            let Ok(server_status) = fetch_server_status().await else { continue };
+
+            status_tx
+                .send(server_status)
+                .expect("Error sending status server");
+
+            let _ = tokio::time::sleep(Duration::from_secs(1)).await;
         }
     });
 
@@ -82,6 +97,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         while let Ok(pyload_event) = rx.try_recv() {
             app.handle_pyload_events(pyload_event).await;
         }
+
+        if status_rx.has_changed().unwrap_or(false) {
+            app.update_status(status_rx.borrow().clone());
+        }
+
     }
 
     execute!(std::io::stdout(), DisableBracketedPaste)?;
