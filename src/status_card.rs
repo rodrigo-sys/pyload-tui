@@ -7,11 +7,11 @@ use ratatui::{
 };
 
 #[derive(Clone)]
-pub struct StatusBar {
+pub struct StatusCard {
     server_status: Option<ServerStatus>,
 }
 
-impl StatusBar {
+impl StatusCard {
     pub fn new() -> Self {
         Self {
             server_status: None,
@@ -27,13 +27,13 @@ impl StatusBar {
     }
 }
 
-impl Default for StatusBar {
+impl Default for StatusCard {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Widget for StatusBar {
+impl Widget for StatusCard {
     fn render(self, area: Rect, buf: &mut Buffer) {
         if let Some(status) = self.server_status {
             StatusTable::from(status).0.render(area, buf);

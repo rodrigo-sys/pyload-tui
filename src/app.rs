@@ -9,7 +9,7 @@ use crate::{
     files_screen::FilesScreen,
     packages_screen::PackagesScreen,
     screens::{Screen, ScreenHandler},
-    status_bar::StatusBar,
+    status_card::StatusCard,
     utils::{
         fetch_file_data, fetch_files, fetch_package_data, fetch_packages, fetch_server_status,
         move_package, pause_server, remove_files_from_package, remove_packages, reorder_file,
@@ -33,7 +33,7 @@ macro_rules! find_screen {
 pub struct App {
     pub current_screen: Screen,
     pub previous_screen: Option<Screen>,
-    pub status_bar: StatusBar,
+    pub status_card: StatusCard,
     pub quit: bool,
 }
 
@@ -44,7 +44,7 @@ impl App {
             current_screen: Screen::Packages(packages),
             previous_screen: None,
             quit: false,
-            status_bar: StatusBar::new(),
+            status_card: StatusCard::new(),
         }
     }
 
@@ -57,7 +57,7 @@ impl App {
     }
 
     pub fn update_status(&mut self, server_status: ServerStatus) {
-        self.status_bar.refresh(server_status);
+        self.status_card.refresh(server_status);
     }
 
     pub fn update_downloads_info(&mut self, info: Vec<DownloadInfo>) {

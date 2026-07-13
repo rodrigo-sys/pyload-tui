@@ -101,7 +101,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
 
             let bottom_area = bottom_layout.split(areas[1]);
-            frame.render_widget(app.status_bar.clone(), bottom_area[1]);
+            frame.render_widget(app.status_card.clone(), bottom_area[1]);
             frame.render_widget(KeyHints::new(&app.get_bindings()), bottom_area[3]);
         })?;
 
