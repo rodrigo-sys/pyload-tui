@@ -1,10 +1,13 @@
-use openapi::models::{DownloadInfo, DownloadStatus};
+use crossterm::event::{KeyCode, KeyEvent};
+use openapi::models::DownloadInfo;
 use ratatui::{
     layout::Constraint,
     prelude::{Buffer, Rect},
     style::{Color, Style},
     widgets::{Row, StatefulWidget, Table, TableState},
 };
+
+use crate::{app_action::AppAction, screens::ScreenHandler};
 
 #[derive(Clone)]
 pub struct DownloadsScreen {
@@ -26,6 +29,23 @@ impl Default for DownloadsScreen {
         Self {
             downloads_info: vec![],
             table_state: TableState::new(),
+        }
+    }
+}
+
+impl ScreenHandler for DownloadsScreen {
+    async fn handle_keys(&mut self, key: KeyEvent) -> Option<AppAction> {
+        match key.code {
+            KeyCode::Char('q') => Some(AppAction::Quit),
+            KeyCode::Char('j') => {
+                self.table_state.select_next();
+                None
+            }
+            KeyCode::Char('k') => {
+                self.table_state.select_previous();
+                None
+            }
+            _ => None,
         }
     }
 }
