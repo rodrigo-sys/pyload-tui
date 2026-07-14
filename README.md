@@ -3,8 +3,7 @@
 [features](#features) • [installation](#installation) • [prerequisites](#prerequisites) • [usage](#usage) • [bindings](#bindings) • [build](#build-from-source)
 
 Terminal UI client for pyLoad.
-<img width="1252" height="830" alt="demo" src="https://github.com/user-attachments/assets/2b384c8f-336b-44c3-b10e-81c143728a24" />
-
+<img width="1200" height="700" alt="demo" src="https://github.com/user-attachments/assets/cf229eb1-e04a-4d87-acef-361c7f8250e5" />
 
 ## Features
 
