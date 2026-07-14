@@ -32,7 +32,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
 
-            let _ = tokio::time::sleep(Duration::from_secs(3));
+            let _ = tokio::time::sleep(Duration::from_secs(3)).await;
         }
     });
 
