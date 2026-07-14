@@ -1561,7 +1561,7 @@ dependencies = [
 
 [[package]]
 name = "pyload-tui"
-version = "0.43.1"
+version = "0.43.2"
 dependencies = [
  "crossterm",
  "dirs",

@@ -1,6 +1,6 @@
 [package]
 name = "pyload-tui"
-version = "0.43.1"
+version = "0.43.2"
 edition = "2024"
 repository = "https://github.com/rodrigo-sys/pyload-tui"
 
