@@ -1,9 +1,9 @@
 use crossterm::event::{KeyCode, KeyEvent};
+use ratatui::layout::HorizontalAlignment;
 use ratatui::{
     style::{Color, Style},
     widgets::{Block, Borders, Paragraph},
 };
-use ratatui::layout::HorizontalAlignment;
 use ratatui_textarea::TextArea;
 
 use super::SelectedInput;
@@ -51,7 +51,6 @@ impl ScreenHandler for AppendFilesForm {
             self.links.insert_str(content);
         }
     }
-
 }
 
 impl AppendFilesForm {
@@ -72,7 +71,7 @@ impl AppendFilesForm {
         }
     }
 
-    async fn submit(&self) -> Option<AppAction> {
+    async fn submit(&mut self) -> Option<AppAction> {
         let links: Vec<String> = self
             .links
             .lines()
@@ -86,6 +85,12 @@ impl AppendFilesForm {
         }
 
         add_links_to_package(self.package_id, links).await.ok()?;
+        self.reset();
         Some(AppAction::GoToPreviousScreen)
+    }
+
+    fn reset(&mut self) {
+        self.links.clear();
+        self.selected = SelectedInput::default();
     }
 }

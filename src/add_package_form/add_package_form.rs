@@ -103,11 +103,10 @@ impl ScreenHandler for AddPackageForm {
             _ => {}
         }
     }
-
 }
 
 impl AddPackageForm {
-    async fn submit(&self) -> Option<AppAction> {
+    async fn submit(&mut self) -> Option<AppAction> {
         let name = self.name.lines().join("\n");
 
         let links = self
@@ -130,7 +129,23 @@ impl AddPackageForm {
         };
 
         add_package(name, links, password, dest).await.ok()?;
+        self.reset();
         Some(AppAction::GoToPreviousScreen)
+    }
+
+    fn reset(&mut self) {
+        self.name.clear();
+        self.links.clear();
+        self.password.clear();
+        self.selected = SelectedInput::default();
+        self.queue_checked = false;
+        self.collector_checked = true;
+        self.queue = Checkbox::new("Queue", false)
+            .checked_symbol("\u{f111} ")
+            .unchecked_symbol("\u{f10c} ");
+        self.collector = Checkbox::new("collector", true)
+            .checked_symbol("\u{f111} ")
+            .unchecked_symbol("\u{f10c} ");
     }
 
     fn handle_text_input(&mut self, key: KeyEvent) {
