@@ -76,10 +76,10 @@ impl App {
     pub async fn handle_key(&mut self, key: KeyEvent) {
         let mut action = self.current_screen.handle_keys(key).await;
 
-        if action.is_none() {
+        if action.is_none() && !self.current_screen.is_form()
+        {
             action = match key.code {
-                KeyCode::Char('q') => (!matches!(&self.current_screen, Screen::AddPackageForm(_)))
-                    .then_some(AppAction::Quit),
+                KeyCode::Char('q') => Some(AppAction::Quit),
                 KeyCode::Char('A') => Some(AppAction::OpenAddPackageForm),
                 KeyCode::Char('R') => Some(AppAction::RestartFailed),
                 KeyCode::Char('S') => Some(AppAction::AbortActive),

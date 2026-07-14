@@ -28,3 +28,9 @@ pub enum Screen {
     AddPackageForm(AddPackageForm),
     AppendFilesForm(AppendFilesForm),
 }
+
+impl Screen {
+    pub fn is_form(&self) -> bool {
+        matches!(self, Self::AddPackageForm(_) | Self::AppendFilesForm(_))
+    }
+}
