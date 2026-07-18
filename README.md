@@ -1,6 +1,6 @@
 # pyload-tui
 
-[features](#features) • [installation](#installation) • [prerequisites](#prerequisites) • [usage](#usage) • [bindings](#bindings) • [build](#build-from-source)
+[features](#features) • [installation](#installation) • [prerequisites](#prerequisites) • [usage](#usage) • [bindings](#bindings) • [faq](#faq) • [build](#build-from-source)
 
 Terminal UI client for pyLoad.
 <img width="1200" height="700" alt="demo" src="https://github.com/user-attachments/assets/cf229eb1-e04a-4d87-acef-361c7f8250e5" />
@@ -124,6 +124,73 @@ Run `pyload-tui` in your terminal.
 | `Esc` | Go back |
 | `Tab` / `Shift+Tab` | Cycle form fields |
 | `Enter` | Toggle / submit |
+
+
+## FAQ
+
+<details>
+<summary>FAQ</summary>
+<br>
+<details>
+<summary>How stop all downloads?</summary>
+
+There are _active downloads_ and _packages on the queue_.
+
+If you want to stop everything you need to:
+- Pause the queue with `P`
+- Abort active downloads with `S`
+
+`X` do those both things at once:
+  - first press: pause + abort
+  - second press:
+    resets files with `ABORTED` status +
+    unpaused queue
+</details>
+
+<details>
+<summary>How to download files with ABORTED status?</summary>
+
+When you stop a download the status of the file changes to `ABORTED`.
+
+To reset it you can:
+- press `r` with the aborted file selected
+- or press `R` anywhere to reset all aborted files at once
+
+reset means set status to `QUEUED`
+
+Pressing `r` on a package will reset every file in that package,
+including `FINISHED` ones, meaning they will be re-downloaded.
+</details>
+
+<details>
+<summary>What's queue?</summary>
+
+The **queue** holds packages that are waiting to be downloaded.
+
+pyLoad processes them in order, starting from the top.
+
+You can reorder them with `J` / `K`.
+</details>
+
+<details>
+<summary>What's collector?</summary>
+
+The **collector** is a staging area for packages you don't want to download yet.
+
+Move packages between collector/queue with `m` on the selected package.
+</details>
+
+<details>
+<summary>What's a package?</summary>
+
+A **package** is a container for files (download links) inside pyLoad.
+
+When you add a package, it goes to either the **collector** or the **queue** depending on how you set it up.
+
+Each package can have multiple links inside it.
+</details>
+
+</details>
 
 ## Build from source
 
