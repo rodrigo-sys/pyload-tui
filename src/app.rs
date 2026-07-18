@@ -76,8 +76,7 @@ impl App {
     pub async fn handle_key(&mut self, key: KeyEvent) {
         let mut action = self.current_screen.handle_keys(key).await;
 
-        if action.is_none() && !self.current_screen.is_form()
-        {
+        if action.is_none() && !self.current_screen.is_form() {
             action = match key.code {
                 KeyCode::Char('q') => Some(AppAction::Quit),
                 KeyCode::Char('A') => Some(AppAction::OpenAddPackageForm),
@@ -125,6 +124,11 @@ impl App {
             }
             Some(AppAction::RestartFailed) => {
                 let _ = restart_failed().await;
+                if let Screen::Files(s) = &mut self.current_screen
+                    && let Ok(files) = fetch_files(s.package_id).await
+                {
+                    s.files = files;
+                }
             }
             Some(AppAction::AbortActive) => {
                 let _ = stop_all_downloads().await;
