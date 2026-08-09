@@ -86,7 +86,7 @@ impl From<(Vec<FileData>, Vec<DownloadInfo>)> for FilesTable {
                     .unwrap_or_default();
 
                 Row::new(vec![
-                    Cell::from(f.fid.to_string()),
+                    Cell::from(f.order.to_string()),
                     Cell::from(f.name),
                     Cell::from(size),
                     Cell::from(format!("{:?}", f.status)),
@@ -98,7 +98,7 @@ impl From<(Vec<FileData>, Vec<DownloadInfo>)> for FilesTable {
             .collect();
 
         let header = Row::new(vec![
-            Cell::from("FID"),
+            Cell::from("#"),
             Cell::from("Name"),
             Cell::from("Size"),
             Cell::from("Status"),
