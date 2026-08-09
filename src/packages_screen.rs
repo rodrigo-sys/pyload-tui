@@ -1,8 +1,5 @@
 use crossterm::event::{KeyCode, KeyEvent};
-use openapi::{
-    apis::py_load_rest_api::api_get_events_get,
-    models::{Destination, PackageData},
-};
+use openapi::models::{Destination, PackageData};
 use ratatui::{
     buffer::Buffer,
     layout::Rect,

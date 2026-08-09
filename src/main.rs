@@ -2,10 +2,9 @@ use std::time::Duration;
 
 use crossterm::event::{self, DisableBracketedPaste, EnableBracketedPaste};
 use crossterm::execute;
-use openapi::apis::py_load_rest_api::api_get_events_get;
 use openapi::models::{DownloadInfo, ServerStatus};
 use pyload_tui::utils::{
-    ensure_app_config_exists, fetch_downloads_info, fetch_server_status, get_pyload_config,
+    ensure_app_config_exists, fetch_downloads_info, fetch_pyload_events, fetch_server_status,
 };
 use pyload_tui::{app::App, key_hints::KeyHints, screens::Screen};
 use ratatui::layout::{Constraint, Direction, Layout};
@@ -21,15 +20,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (tx, mut rx) = mpsc::channel(64);
     tokio::spawn(async move {
         loop {
-            if let Ok(events_info) = api_get_events_get(
-                get_pyload_config(),
-                Some(std::process::id().to_string().as_ref()),
-            )
-            .await
-            {
-                for event in events_info {
-                    tx.send(event).await.expect("Error sending pyload events");
-                }
+            for event in fetch_pyload_events().await {
+                tx.send(event).await.expect("Error sending pyload events");
             }
 
             let _ = tokio::time::sleep(Duration::from_millis(200)).await;
@@ -54,7 +46,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             } else {
                 Vec::new()
             };
-            dl_tx.send(downloads_info).expect("Error sending downloads info");
+            dl_tx
+                .send(downloads_info)
+                .expect("Error sending downloads info");
 
             tokio::time::sleep(Duration::from_secs(1)).await;
         }
@@ -110,7 +104,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         while let Ok(pyload_event) = rx.try_recv() {
-            app.handle_pyload_events(pyload_event).await;
+            app.handle_pyload_event(pyload_event).await;
         }
 
         if status_rx.has_changed().unwrap_or(false) {

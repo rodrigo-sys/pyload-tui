@@ -11,10 +11,10 @@ use crate::{
     screens::{Screen, ScreenHandler},
     status_card::StatusCard,
     utils::{
-        fetch_file_data, fetch_files, fetch_package_data, fetch_packages, fetch_server_status,
-        move_package, pause_server, remove_files_from_package, remove_packages, reorder_file,
-        reorder_package, restart_failed, restart_file, restart_package, stop_all_downloads,
-        stop_downloads, toggle_pause, unpause_server,
+        fetch_file_data, fetch_files, fetch_package_data, fetch_packages, fetch_pyload_events,
+        fetch_server_status, move_package, pause_server, remove_files_from_package,
+        remove_packages, reorder_file, reorder_package, restart_failed, restart_file,
+        restart_package, stop_all_downloads, stop_downloads, toggle_pause, unpause_server,
     },
 };
 
@@ -91,27 +91,36 @@ impl App {
             };
         }
 
+        let mut mutated = false;
         match action {
             Some(AppAction::Quit) => self.quit = true,
             Some(AppAction::OpenAddPackageForm) => self.go_to_add_package_form(),
             Some(AppAction::OpenAppendFilesForm(pid, name)) => {
                 self.go_to_append_files_form(pid, name)
             }
-            Some(AppAction::GoToPackages) => self.go_to_packages(),
+            Some(AppAction::GoToPackages) => {
+                self.go_to_packages();
+                mutated = true;
+            }
             Some(AppAction::GoToDownloads) => self.go_to_downloads(),
             Some(AppAction::GoToFiles(pid, name)) => self.go_to_files(pid, name).await,
             Some(AppAction::DeletePackages(packages)) => {
-                if let Some(package_id) = packages.first() {
-                    let _ = remove_packages(vec![*package_id]).await;
+                if let Some(package_id) = packages.first()
+                    && remove_packages(vec![*package_id]).await.is_ok()
+                {
+                    mutated = true;
                 }
             }
             Some(AppAction::DeleteFiles(files)) => {
-                if let Some(file_id) = files.first() {
-                    let _ = remove_files_from_package(vec![*file_id]).await;
+                if let Some(file_id) = files.first()
+                    && remove_files_from_package(vec![*file_id]).await.is_ok()
+                {
+                    mutated = true;
                 }
             }
             Some(AppAction::GoToPreviousScreen) => {
                 self.go_to_previous_screen();
+                mutated = true;
             }
             Some(AppAction::StopDownloads(files)) => {
                 let _ = stop_downloads(files).await;
@@ -154,20 +163,36 @@ impl App {
             Some(AppAction::TogglePause) => {
                 let _ = toggle_pause().await;
             }
-            Some(AppAction::ReorderPackage(pid, position)) => {
-                let _ = reorder_package(pid, position).await;
+            Some(AppAction::ReorderPackage(pid, position))
+                if reorder_package(pid, position).await.is_ok() =>
+            {
+                mutated = true;
             }
-            Some(AppAction::ReorderFile(fid, position)) => {
-                let _ = reorder_file(fid, position).await;
+            Some(AppAction::ReorderFile(fid, position))
+                if reorder_file(fid, position).await.is_ok() =>
+            {
+                mutated = true;
             }
-            Some(AppAction::MovePackage(destination, pid)) => {
-                let _ = move_package(destination, pid).await;
+            Some(AppAction::MovePackage(destination, pid))
+                if move_package(destination, pid).await.is_ok() =>
+            {
+                mutated = true;
             }
             _ => {}
         }
+
+        if mutated {
+            self.handle_pyload_events().await;
+        }
     }
 
-    pub async fn handle_pyload_events(&mut self, event: EventInfo) {
+    async fn handle_pyload_events(&mut self) {
+        for event in fetch_pyload_events().await {
+            self.handle_pyload_event(event).await;
+        }
+    }
+
+    pub async fn handle_pyload_event(&mut self, event: EventInfo) {
         let event_id = event.id.flatten();
         let event_type = event.r#type.flatten();
 
@@ -198,16 +223,12 @@ impl App {
                     }
                 }
                 (Some(1), Some(fid)) => {
-                    if let Some(files_screen) = find_screen!(self, Files) {
-                        if let Ok(file) = fetch_file_data(fid).await {
-                            if files_screen.package_id == file.package_id {
-                                if let Some(position) =
-                                    files_screen.files.iter().position(|f| f.fid == fid)
-                                {
-                                    files_screen.files[position] = file;
-                                }
-                            }
-                        }
+                    if let Some(files_screen) = find_screen!(self, Files)
+                        && let Ok(file) = fetch_file_data(fid).await
+                        && files_screen.package_id == file.package_id
+                        && let Some(position) = files_screen.files.iter().position(|f| f.fid == fid)
+                    {
+                        files_screen.files[position] = file;
                     }
                 }
                 _ => {}
@@ -244,6 +265,8 @@ impl App {
                     let Ok(package) = fetch_package_data(pid).await else {
                         return;
                     };
+
+                    screen.packages.retain(|p| p.pid != pid);
 
                     let position = screen
                         .packages
